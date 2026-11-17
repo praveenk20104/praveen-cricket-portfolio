@@ -23,6 +23,43 @@ const RELEASE = new THREE.Vector3(0.32, 2.15, 9.2)
 const BOUNCE = new THREE.Vector3(0.07, BALL_R, -4.3)
 const HIT = new THREE.Vector3(0.0, 0.42, WICKET_Z + 0.06)
 
+// Position of the delivery at time t (0 → T_HIT): release, pitch, then into the stumps
+function flightPoint(t, out) {
+  if (t < T_BOUNCE) {
+    const u = t / T_BOUNCE
+    out.lerpVectors(RELEASE, BOUNCE, u)
+    out.y = THREE.MathUtils.lerp(RELEASE.y, BOUNCE.y, u * u * 0.55 + u * 0.45) + Math.sin(u * Math.PI) * 0.18
+  } else {
+    const u = Math.min((t - T_BOUNCE) / (T_HIT - T_BOUNCE), 1)
+    out.lerpVectors(BOUNCE, HIT, u)
+    out.y = THREE.MathUtils.lerp(BOUNCE.y, HIT.y, u) + Math.sin(u * Math.PI) * 0.22
+  }
+  return out
+}
+
+// Hawk-Eye style ball tracking: the path draws itself behind the ball, the pitching point
+// ripples, and the "wickets" zone lights up red on impact
+const HAWK_SEG = 96
+const HAWK_RAD = 10
+function useHawkEye() {
+  return useMemo(() => {
+    const pts = []
+    for (let i = 0; i <= 64; i++) pts.push(flightPoint((i / 64) * T_HIT, new THREE.Vector3()))
+    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), HAWK_SEG, 0.03, HAWK_RAD, false)
+    tube.setDrawRange(0, 0)
+    const add = { transparent: true, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending }
+    return {
+      tube,
+      tubeMat: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.0, 0.16, 0.3), opacity: 0, ...add }),
+      ringMat: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 2.2, 2.0), opacity: 0, side: THREE.DoubleSide, ...add }),
+      rippleMat: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.2, 0.35), opacity: 0, side: THREE.DoubleSide, ...add }),
+      zoneMat: new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 0.1, 0.22), opacity: 0, side: THREE.DoubleSide, ...add }),
+      edgeMat: new THREE.LineBasicMaterial({ color: new THREE.Color(2.4, 2.2, 2.2), opacity: 0, ...add }),
+      zoneEdges: new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.26, STUMP_H + 0.04)),
+    }
+  }, [])
+}
+
 function neonMaterial(intensity) {
   return new THREE.MeshStandardMaterial({
     color: '#ffe4e8',
@@ -184,12 +221,14 @@ export default function Wicket() {
   }
 
   const tmp = new THREE.Vector3()
+  const hawk = useHawkEye()
+  const ripple = useRef()
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05)
     sparkUniforms.uAge.value += dt
-    // deliveries only run while the batter is off the field (sections 3 → 8)
-    const bowling = store.started && !reducedMotion && store.stage > 2.6 && store.stage < 8.4
+    // deliveries only run while the batter is off the field (services → career)
+    const bowling = store.started && !reducedMotion && store.stage > 1.55 && store.stage < 5.6
     if (!bowling) {
       sim.t0 = null
       if (sim.cycle !== -1) {
@@ -204,6 +243,7 @@ export default function Wicket() {
         refs.stumps.forEach((s) => s?.rotation.set(0, 0, 0))
         mats.stump.emissiveIntensity = 2.4
         mats.bail.emissiveIntensity = 3.4
+        hawk.tubeMat.opacity = hawk.ringMat.opacity = hawk.rippleMat.opacity = hawk.zoneMat.opacity = hawk.edgeMat.opacity = 0
       }
       return
     }
@@ -229,14 +269,8 @@ export default function Wicket() {
 
     // --- Ball flight ---
     const p = tmp
-    if (t < T_BOUNCE) {
-      const u = t / T_BOUNCE
-      p.lerpVectors(RELEASE, BOUNCE, u)
-      p.y = THREE.MathUtils.lerp(RELEASE.y, BOUNCE.y, u * u * 0.55 + u * 0.45) + Math.sin(u * Math.PI) * 0.18
-    } else if (t < T_HIT) {
-      const u = (t - T_BOUNCE) / (T_HIT - T_BOUNCE)
-      p.lerpVectors(BOUNCE, HIT, u)
-      p.y = THREE.MathUtils.lerp(BOUNCE.y, HIT.y, u) + Math.sin(u * Math.PI) * 0.22
+    if (t < T_HIT) {
+      flightPoint(t, p)
     } else {
       if (!sim.hitDone) {
         sim.hitDone = true
@@ -306,6 +340,21 @@ export default function Wicket() {
       s.rotation.z = i === 1 ? wob * 0.05 : 0
     })
 
+    // Hawk-Eye: path grows with the ball, holds, then fades before the next delivery
+    const fade = 1 - THREE.MathUtils.smoothstep(t, T_HIT + 1.3, T_HIT + 2.1)
+    const drawn = Math.min(t / T_HIT, 1)
+    hawk.tube.setDrawRange(0, Math.floor(drawn * HAWK_SEG) * HAWK_RAD * 6)
+    hawk.tubeMat.opacity = 0.6 * fade
+    const pitched = t >= T_BOUNCE
+    hawk.ringMat.opacity = pitched ? 0.85 * fade : 0
+    const rip = pitched ? t - T_BOUNCE : 0
+    ripple.current.scale.setScalar(1 + rip * 6)
+    hawk.rippleMat.opacity = pitched ? Math.max(0, 0.8 - rip * 1.1) : 0
+    const near = THREE.MathUtils.smoothstep(t, T_BOUNCE, T_HIT)
+    hawk.edgeMat.opacity = near * 0.9 * fade
+    const sinceHit = t - T_HIT
+    hawk.zoneMat.opacity = (sinceHit > 0 ? 0.18 + 0.5 * Math.exp(-3 * sinceHit) : near * 0.12) * fade
+
     // Flash on impact
     const flash = since < 1.2 ? Math.exp(-4 * since) : 0
     mats.stump.emissiveIntensity = 2.4 + flash * 9
@@ -340,6 +389,23 @@ export default function Wicket() {
           blending={THREE.AdditiveBlending}
         />
       </points>
+
+      {/* Hawk-Eye ball tracking */}
+      <mesh geometry={hawk.tube} material={hawk.tubeMat} frustumCulled={false} renderOrder={2} />
+      <group position={[BOUNCE.x, 0.014, BOUNCE.z]} rotation-x={-Math.PI / 2}>
+        <mesh material={hawk.ringMat} renderOrder={2}>
+          <ringGeometry args={[0.07, 0.1, 40]} />
+        </mesh>
+        <mesh ref={ripple} material={hawk.rippleMat} renderOrder={2}>
+          <ringGeometry args={[0.1, 0.115, 40]} />
+        </mesh>
+      </group>
+      <group position={[0, (STUMP_H + 0.04) / 2, WICKET_Z + 0.03]}>
+        <mesh material={hawk.zoneMat} renderOrder={2}>
+          <planeGeometry args={[0.26, STUMP_H + 0.04]} />
+        </mesh>
+        <lineSegments geometry={hawk.zoneEdges} material={hawk.edgeMat} renderOrder={2} />
+      </group>
 
       <points ref={sparks} geometry={sparkGeo} frustumCulled={false}>
         <shaderMaterial

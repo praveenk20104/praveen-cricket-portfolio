@@ -41,7 +41,7 @@ export default function SkillOrbit() {
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05)
     const t = state.clock.elapsedTime
-    const vis = THREE.MathUtils.clamp(1 - (Math.abs(store.stage - 5) - 0.3) / 0.4, 0, 1)
+    const vis = THREE.MathUtils.clamp(1 - (Math.abs(store.stage - 4) - 0.3) / 0.4, 0, 1)
     const want = vis > 0.001
     if (want !== activeRef.current) {
       activeRef.current = want

@@ -15,7 +15,7 @@ export default function Contact() {
     <section id="contact" className="relative flex min-h-[100svh] flex-col px-5 pb-8 pt-28 md:px-12 lg:px-16">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-end landscape:justify-center">
         <div className="max-w-3xl portrait:glass-strong portrait:rounded-3xl portrait:p-6 md:portrait:p-9">
-          <Eyebrow no="09">Next innings</Eyebrow>
+          <Eyebrow no="07">Next innings</Eyebrow>
           <h2 data-reveal className="h-display mt-5 text-[clamp(3rem,7.6vw,7.2rem)] !leading-[0.9]">
             Ready for the <br />
             <span className="neon-text">next innings?</span>

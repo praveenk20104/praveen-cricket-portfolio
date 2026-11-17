@@ -77,7 +77,7 @@ export default function CricketBall() {
     const s = store.stage
 
     // Visible in hero, hides as the camera flies past, returns for the contact CTA
-    const vis = Math.max(smooth(s, 0.3, 0.7) * (1 - smooth(s, 1.42, 1.75)), smooth(s, 8.3, 8.9))
+    const vis = Math.max(smooth(s, 0.3, 0.7) * (1 - smooth(s, 1.42, 1.75)), smooth(s, 6.3, 6.9))
     const scale = vis
     outer.current.scale.setScalar(Math.max(scale, 0.0001))
     outer.current.visible = scale > 0.002

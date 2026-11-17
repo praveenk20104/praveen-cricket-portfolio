@@ -4,7 +4,7 @@ import { sections } from '../../data/profile'
 
 // How much to darken the 3D scene behind each section, so text is always readable.
 // The cinematic sections (walk-in, match ball, contact) stay bright.
-const DARKNESS = { hero: 0, matchball: 0.3, about: 0.62, services: 0.7, gameplan: 0.6, skills: 0.45, career: 0.75, projects: 0.72, training: 0.6, contact: 0.3 }
+const DARKNESS = { hero: 0, about: 0.32, services: 0.66, gameplan: 0.3, skills: 0.45, career: 0.74, projects: 0.72, contact: 0.3 }
 
 export default function Scrim() {
   const [idx, setIdx] = useState(0)

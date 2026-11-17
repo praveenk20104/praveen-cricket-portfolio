@@ -13,7 +13,7 @@ export default function ScoreBug() {
   useEffect(
     () =>
       on('delivery', (kmh) => {
-        if (store.stage < 3.4 || store.stage > 6.6) return
+        if (store.stage < 1.6 || store.stage > 5.4) return
         setSpeed(kmh.toFixed(1))
         clearTimeout(timer.current)
         timer.current = setTimeout(() => setSpeed(null), 3400)

@@ -10,6 +10,9 @@ export const store = {
   spin: { x: 0, y: 0 }, // extra angular velocity from drag / swipe
   look: { x: 0, y: 1, z: -9 }, // current camera focus point (used by depth of field)
   batsman: { x: 4.6, y: 0, z: -14.6 }, // where the batsman is right now
+  drone: 0, // 0 → 1 opening aerial camera move (before the walk-in)
+  lights: [0, 0, 0, 0], // each floodlight tower, 0 = off … 1 = on (switched on during the intro)
+  lit: 0, // average of the four towers
   started: false,
 }
 if (typeof window !== 'undefined') window.__store = store // handy for debugging in the console

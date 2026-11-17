@@ -1,8 +1,8 @@
-# Praveen Kumar: 3D Cricket Portfolio (v2)
+# Praveen Kumar: 3D Cricket Portfolio (v5)
 
-A night match in a WebGL stadium. The visitor clicks **Enter the stadium**, a batter in India blue (PRAVEEN, No. 19) walks out under the floodlights, takes guard and taps the pitch, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the match ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (with sixes flying over the boundary), the training camp (big screen and fireworks) and the final "Next innings" call to action.
+A night match in a WebGL stadium. The page opens on a dark ground: the four floodlight towers bang on one by one while a drone camera swoops down from the sky, and a batter in India blue (PRAVEEN, No. 19) walks out, takes guard and taps the pitch before the TV-style player profile appears. Scrolling then moves the camera through seven more shots: the match ball, services over the pitch, the game plan with Hawk-Eye ball tracking, skills around the neon stumps, the career scorecard, projects (sixes flying over the boundary) and the "Next innings" call to action with fireworks.
 
-**Stack:** Vite · React 19 · Tailwind CSS v4 · Three.js + React Three Fiber + Drei · @react-three/postprocessing · GSAP ScrollTrigger · Lenis · Web Audio API
+**Stack:** Vite · React 19 · Tailwind CSS v4 · Three.js + React Three Fiber + Drei · @react-three/postprocessing · GSAP ScrollTrigger · Lenis
 
 ---
 
@@ -42,29 +42,29 @@ public/
   models/batsman.glb         motion-captured figure (walk + idle clips), 0.8 MB
   projects/*.jpg             real dashboard screenshots
 src/
-  App.jsx                    smooth scroll, section → camera stage, walk-in timeline, sound wiring
+  App.jsx                    smooth scroll, section → camera stage, the intro timeline (lights, drone, walk-in)
   data/profile.js            ALL content
   lib/store.js               shared state + event bus between the page and the 3D scene
-  lib/sound.js               stadium sound, synthesised with the Web Audio API (no audio files)
-  lib/shatter.js             glass-shatter effect for the project screenshots
+  lib/sixFx.js               "hit for six" effect on the project screenshots
   components/three/
     Experience.jsx           <Canvas>, reflections, automatic quality ladder
     CameraRig.jsx            walk-in camera move + scroll-driven camera path (10 shots)
     Batsman.jsx              the batter: printed shirt, helmet, pads, gloves and bat built in code; walk, guard, bat tap
     CricketBall.jsx          match ball: procedural leather, raised seam, 576 stitches, gold stamp
-    Wicket.jsx               neon stumps, looping delivery, flying bails, sparks, speed-gun event
+    Wicket.jsx               neon stumps, looping delivery, Hawk-Eye tracking, flying bails, sparks, speed gun
     SixShots.jsx             "wagon wheel": glowing sixes launched from the crease
     Fireworks.jsx            fireworks above the stands
-    Stadium.jsx              pitch, outfield, rope, stands, crowd flashes, floodlights, big LED screen
+    Stadium.jsx              pitch, outfield, rope, LED boards, stands, crowd + Mexican wave, floodlights, big screen
     SkillOrbit.jsx           skills floating around the stumps
     Particles.jsx, Effects.jsx, textures.js
   components/ui/
-    Preloader.jsx            seam loader + "enter with / without sound"
-    IntroOverlay.jsx         broadcast lower-third + skip button
-    Nav.jsx, ScoreBug.jsx    navigation with sound toggle, TV strip with over count and ball speed
+    Preloader.jsx            seam loader (opens by itself at 100%)
+    IntroOverlay.jsx         intro title, LIVE bug, lower-third, skip button
+    Nav.jsx, ScoreBug.jsx    navigation, TV strip with over count and ball speed
+    WicketFlash.jsx          "WICKET! Bowled" graphic when a delivery hits the stumps
     Scrim.jsx                keeps text readable over the 3D scene
     Cursor.jsx, Magnetic.jsx custom cursor (bat over projects), magnetic buttons
-  sections/                  Hero, MatchBall, About, Services, GamePlan, Skills, Career, Projects, Training, Contact
+  sections/                  Hero, About, Services, GamePlan, Skills, Career, Projects, Contact
 ```
 
 ## 5. Works on every screen
@@ -82,7 +82,6 @@ Layouts follow the screen's **shape** (portrait or landscape), not just its widt
 ## 6. Notes
 
 - **The batter** uses the "X Bot" motion-capture figure from Adobe Mixamo (free for commercial use inside a project). His kit is generated in code: an original design in India colours (blue with saffron trim) with PRAVEEN and 19 printed on the back. It deliberately carries no board crest or sponsor logos. The walk-in camera follows him from behind first, so the name and number are seen. To use a custom character later, replace `public/models/batsman.glb` with any Mixamo-rigged GLB that has clips named `walk` and `idle`.
-- **Sound** only starts after the visitor clicks "Enter the stadium · sound on" (browsers block audio before a click). It can be switched on or off from the speaker button in the navigation.
-- **The walk-in** plays once per browser tab. Reloading goes straight to the hero. "Skip intro" is always available.
-- **Performance:** the site measures the real frame rate and moves between quality levels (low / medium / high). Laptops with built-in graphics and older phones start on the light level and only climb if they stay smooth. On the light level glass blur, shadows and light beams are off. Add `?q=low`, `?q=medium` or `?q=high` to the URL to test a level by hand.
+- **The intro** plays once per browser tab. Reloading goes straight to the hero. "Skip intro" is always available.
+- **Performance:** the site measures the real frame rate and moves between quality levels (low / medium / high). Laptops with built-in graphics and older phones start on a lighter level and only climb if they stay smooth. The lightest level switches off post-processing completely. Phones and tablets always use solid panels instead of live glass blur, and the 3D skill labels only exist while the Skills section is near. Add `?q=min`, `?q=low`, `?q=medium` or `?q=high` to the URL to test a level by hand.
 - Respects `prefers-reduced-motion` (no walk-in, no deliveries, no fireworks).

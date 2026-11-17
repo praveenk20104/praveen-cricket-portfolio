@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, PerformanceMonitor } from '@react-three/drei'
 import * as THREE from 'three'
 import CameraRig from './CameraRig'
@@ -12,7 +12,16 @@ import Batsman from './Batsman'
 import SixShots from './SixShots'
 import Fireworks from './Fireworks'
 import Effects from './Effects'
-import { store, isTouch } from '../../lib/store'
+import { store, isTouch, onSectionChange } from '../../lib/store'
+
+// Without post-processing the renderer itself must do the filmic tone mapping
+function ToneMap({ quality }) {
+  const gl = useThree((s) => s.gl)
+  useEffect(() => {
+    gl.toneMapping = quality === 'min' ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping
+  }, [gl, quality])
+  return null
+}
 
 function ReadySignal({ onReady }) {
   const frames = useRef(0)
@@ -48,9 +57,10 @@ function Reflections() {
 // Each level also has a pixel budget (px). The 3D picture is rendered at whatever resolution
 // fits that budget and then stretched to the screen, so a 4K Smart TV, an iPad and a small
 // laptop all give the graphics chip the same amount of work.
+//   min    = no post-processing at all (the renderer does the tone mapping), for weak phones
 const TIERS = isTouch
-  ? [{ q: 'low', px: 0.45e6 }, { q: 'low', px: 0.8e6 }, { q: 'low', px: 1.3e6 }]
-  : [{ q: 'low', px: 0.9e6 }, { q: 'low', px: 1.5e6 }, { q: 'medium', px: 2.6e6 }, { q: 'high', px: 4.6e6 }]
+  ? [{ q: 'min', px: 0.38e6 }, { q: 'low', px: 0.62e6 }, { q: 'low', px: 1.0e6 }]
+  : [{ q: 'min', px: 0.7e6 }, { q: 'low', px: 1.2e6 }, { q: 'medium', px: 2.2e6 }, { q: 'high', px: 3.6e6 }]
 const START = isTouch ? 1 : 2
 // Optional manual override for testing: add ?q=low, ?q=medium or ?q=high to the URL
 const FORCED = (() => {
@@ -93,9 +103,15 @@ export default function Experience({ onReady, started }) {
   const lite = level < START // the device has struggled: switch off the expensive extras
   const wrap = useRef()
 
+  // Live glass blur over a moving 3D scene is one of the most expensive things a browser can do,
+  // so phones and tablets always use solid panels, and so does any device that has struggled
   useEffect(() => {
-    document.documentElement.classList.toggle('perf-min', lite)
+    document.documentElement.classList.toggle('perf-min', lite || isTouch)
   }, [lite])
+
+  // The skill labels are HTML elements that move every frame: only create them near the Skills section
+  const [skillsNear, setSkillsNear] = useState(false)
+  useEffect(() => onSectionChange((i) => setSkillsNear(i >= 3 && i <= 5)), [])
 
   // Drag / swipe to spin the ball (horizontal swipes don't block vertical page scroll)
   useEffect(() => {
@@ -135,7 +151,7 @@ export default function Experience({ onReady, started }) {
       <Canvas
         dpr={dpr}
         shadows={isTouch ? false : 'percentage'}
-        camera={{ fov: 42, near: 0.1, far: 450, position: [6.27, 1.45, -16.6] }}
+        camera={{ fov: 42, near: 0.1, far: 450, position: [52, 40, 46] }}
         gl={{ antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.NoToneMapping
@@ -166,7 +182,8 @@ export default function Experience({ onReady, started }) {
           <Wicket />
           <SixShots />
           <Fireworks />
-          <SkillOrbit />
+          {skillsNear && <SkillOrbit />}
+          <ToneMap quality={quality} />
           <Particles />
           <Effects quality={quality} />
           <ReadySignal onReady={onReady} />

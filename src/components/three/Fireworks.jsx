@@ -96,7 +96,7 @@ export default function Fireworks() {
     const t = state.clock.elapsedTime
     uniforms.uTime.value = t
     if (reducedMotion) return
-    const show = store.stage > 7.55
+    const show = store.stage > 6.55
     if ((show || queue.current > 0) && t > next.current) {
       launch(t)
       if (queue.current > 0) queue.current--
