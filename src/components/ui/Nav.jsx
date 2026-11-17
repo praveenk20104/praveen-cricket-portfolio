@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSectionChange, scrollToId } from '../../lib/store'
+import { sound } from '../../lib/sound'
 import { profile, sections } from '../../data/profile'
 
 const LINKS = [
@@ -11,6 +12,25 @@ const LINKS = [
   { id: 'contact', label: 'Contact' },
 ]
 const indexOf = (id) => sections.findIndex((s) => s.id === id)
+
+function SoundButton() {
+  const [on, setOn] = useState(false)
+  useEffect(() => sound.subscribe(setOn), [])
+  return (
+    <button
+      onClick={() => sound.setEnabled(!on)}
+      className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white transition hover:border-[#ff1f3d]"
+      aria-label={on ? 'Turn stadium sound off' : 'Turn stadium sound on'}
+      aria-pressed={on}
+      title={on ? 'Sound on' : 'Sound off'}
+    >
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 9v6h4l5 4V5L8 9H4z" />
+        {on ? <path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" stroke="#ff3350" /> : <path d="M17 9.5l4 5M21 9.5l-4 5" />}
+      </svg>
+    </button>
+  )
+}
 
 export default function Nav() {
   const [active, setActive] = useState(0)
@@ -56,6 +76,7 @@ export default function Nav() {
           </ul>
 
           <div className="flex items-center gap-2">
+            <SoundButton />
             <a
               href={profile.resume}
               download

@@ -474,9 +474,9 @@ export default function Batsman() {
     const dt = Math.min(delta, 0.05)
     dustUniforms.uAge.value += dt
     const group = root.current
-    const show = store.stage < 1.45
+    const show = store.stage < 1.9
     group.visible = show
-    keyLight.current.intensity = show ? 75 * store.lit : 0
+    keyLight.current.intensity = show ? 75 : 0
     if (!show) return
 
     // where he is and which way he faces

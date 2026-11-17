@@ -77,7 +77,7 @@ export default function SixShots() {
   const p = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((state) => {
-    const active = !reducedMotion && Math.abs(store.stage - 6) < 0.85
+    const active = !reducedMotion && Math.abs(store.stage - 7) < 0.85
     group.current.visible = active
     if (!active) return
     const t = state.clock.elapsedTime

@@ -10,9 +10,9 @@ const icons = {
 
 export default function Services() {
   return (
-    <section id="services" className="relative flex min-h-screen items-center px-5 py-24 md:px-12 lg:px-16">
+    <section id="services" className="relative flex min-h-screen items-center px-5 py-28 md:px-12 lg:px-16">
       <div className="mx-auto w-full max-w-7xl">
-        <Eyebrow no="02">What I bring to the team</Eyebrow>
+        <Eyebrow no="03">What I bring to the team</Eyebrow>
         <h2 data-reveal className="h-display mt-5 max-w-4xl text-[clamp(2.7rem,6vw,5.6rem)]">
           Four ways I <span className="neon-red">score</span> for your business.
         </h2>

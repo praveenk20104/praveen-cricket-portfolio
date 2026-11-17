@@ -61,7 +61,6 @@ function LowEffects() {
 }
 
 export default function Effects({ quality }) {
-  if (quality === 'min') return null
   if (quality === 'high') return <HighEffects />
   if (quality === 'medium') return <MediumEffects />
   return <LowEffects />

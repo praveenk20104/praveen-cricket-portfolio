@@ -12,7 +12,6 @@ export default function Cursor() {
   useEffect(() => {
     if (isTouch) return
     document.documentElement.classList.add('has-cursor')
-    document.body.classList.add('cursor-hidden') // until the mouse first moves
     const dx = gsap.quickTo(dot.current, 'x', { duration: 0.08, ease: 'power3' })
     const dy = gsap.quickTo(dot.current, 'y', { duration: 0.08, ease: 'power3' })
     const rx = gsap.quickTo(ring.current, 'x', { duration: 0.45, ease: 'power3' })

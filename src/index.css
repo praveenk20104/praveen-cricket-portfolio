@@ -355,103 +355,20 @@ html.has-cursor * {
   opacity: 0;
 }
 
-/* ------------------------------------------------ "hit for six" effect (projects) */
-.fx-layer {
+/* ------------------------------------------------ shatter effect */
+.shard {
   position: absolute;
   inset: 0;
-  z-index: 10;
   pointer-events: none;
-  perspective: 800px;
-  transform-style: preserve-3d;
-}
-.fx-layer > div {
-  position: absolute;
-  left: 0;
-  top: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05) 60%, rgba(255, 60, 90, 0.22));
+  border-radius: inherit;
   will-change: transform, opacity;
 }
-.fx-flash {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 70, 100, 0.55) 30%, rgba(255, 31, 61, 0) 70%);
-  mix-blend-mode: screen;
-}
-.fx-ring {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid #ff3350;
-  box-shadow: 0 0 14px #ff1f3d, inset 0 0 10px rgba(255, 31, 61, 0.6);
-}
-.fx-ring--white {
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
-}
-.fx-spark {
-  width: 3px;
-  height: 16px;
-  border-radius: 3px;
-  background: linear-gradient(#fff2c4, #ff8a1f 45%, #ff1f3d);
-  box-shadow: 0 0 8px rgba(255, 120, 60, 0.9);
-}
-.fx-ball {
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, #ff9aa4 0%, #d3162a 26%, #8e0a17 62%, #3a0408 100%);
-  box-shadow:
-    0 0 18px rgba(255, 40, 70, 0.9),
-    0 0 44px rgba(255, 31, 61, 0.5);
-}
-.fx-ball::after {
-  content: '';
+.crack {
   position: absolute;
-  inset: 1px 10px;
-  border-left: 2px dashed #f6ead6;
-  border-right: 2px dashed #f6ead6;
-  border-radius: 50%;
-  opacity: 0.9;
-}
-.fx-ball--ghost {
-  background: radial-gradient(circle, rgba(255, 90, 110, 0.9), rgba(255, 31, 61, 0) 70%);
-  box-shadow: none;
-}
-.fx-ball--ghost::after {
-  display: none;
-}
-.fx-layer > .fx-six {
-  left: auto;
-  top: 8%;
-  right: 6%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  transform-style: preserve-3d;
-}
-.fx-six__big {
-  font-family: var(--font-display);
-  font-size: clamp(2.6rem, 6vw, 4.6rem);
-  line-height: 0.9;
-  color: #fff;
-  background: #e5142e;
-  padding: 0.12em 0.35em 0.06em;
-  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
-  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
-  box-shadow: 0 0 40px rgba(255, 31, 61, 0.7);
-}
-.fx-six__small {
-  margin-top: 4px;
-  background: #fff;
-  color: #0a0508;
-  padding: 0.25em 0.7em;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
 }
 
 /* ------------------------------------------------ CTA glow button */

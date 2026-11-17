@@ -211,11 +211,13 @@ export const ticker = ['Python', 'SQL', 'Power BI', 'Advanced Excel', 'DAX', 'Po
 // One entry per section, in page order. The index is the camera "stage".
 export const sections = [
   { id: 'hero', label: 'Walk-in' },
-  { id: 'about', label: 'New ball' },
+  { id: 'matchball', label: 'New ball' },
+  { id: 'about', label: 'Pitch report' },
   { id: 'services', label: 'Services' },
   { id: 'gameplan', label: 'Game plan' },
   { id: 'skills', label: 'Skills' },
   { id: 'career', label: 'Scorecard' },
   { id: 'projects', label: 'Projects' },
+  { id: 'training', label: 'Training' },
   { id: 'contact', label: 'Next innings' },
 ]

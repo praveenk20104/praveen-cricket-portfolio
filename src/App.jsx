@@ -7,24 +7,26 @@ import IntroOverlay from './components/ui/IntroOverlay'
 import Cursor from './components/ui/Cursor'
 import Nav from './components/ui/Nav'
 import ScoreBug from './components/ui/ScoreBug'
-import WicketFlash from './components/ui/WicketFlash'
 import Scrim from './components/ui/Scrim'
 import Hero from './sections/Hero'
+import MatchBall from './sections/MatchBall'
 import About from './sections/About'
 import Services from './sections/Services'
 import GamePlan from './sections/GamePlan'
 import Skills from './sections/Skills'
 import Career from './sections/Career'
 import Projects from './sections/Projects'
+import Training from './sections/Training'
 import Contact from './sections/Contact'
 import { sections } from './data/profile'
-import { emit, reducedMotion, scroller, setStage, store } from './lib/store'
+import { emit, on, onSectionChange, reducedMotion, scroller, setStage, store } from './lib/store'
+import { sound } from './lib/sound'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const Experience = lazy(() => import('./components/three/Experience'))
 
-// The full intro plays once per browser tab; after that a reload goes straight to the hero.
+// The walk-in plays once per browser tab; after that a reload goes straight to the hero.
 const seen = {
   get: () => {
     try {
@@ -46,14 +48,14 @@ export default function App() {
   const [sceneReady, setSceneReady] = useState(false)
   const [phase, setPhase] = useState('loading') // loading → intro → live
   const intro = useRef(null)
-  const quiet = useRef(false) // true while the intro is being skipped: no dust puffs / fireworks volley
+  const quiet = useRef(false) // true while the intro is being skipped: no tap sounds / dust
 
   /* ---------- smooth scroll (Lenis) driven by GSAP's ticker ---------- */
   useEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
     window.scrollTo(0, 0)
     const lenis = new Lenis({
-      duration: 1.2,
+      duration: 1.3,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: !reducedMotion,
     })
@@ -62,7 +64,7 @@ export default function App() {
     const raf = (time) => lenis.raf(time * 1000)
     gsap.ticker.add(raf)
     gsap.ticker.lagSmoothing(0)
-    lenis.stop() // locked until the intro has finished
+    lenis.stop() // locked until the walk-in has finished
     return () => {
       gsap.ticker.remove(raf)
       lenis.destroy()
@@ -76,7 +78,7 @@ export default function App() {
       store.mouse.x = (e.clientX / window.innerWidth) * 2 - 1
       store.mouse.y = -((e.clientY / window.innerHeight) * 2 - 1)
     }
-    window.addEventListener('mousemove', onMove, { passive: true })
+    window.addEventListener('mousemove', onMove)
     return () => window.removeEventListener('mousemove', onMove)
   }, [])
 
@@ -103,11 +105,48 @@ export default function App() {
     return () => triggers.forEach((t) => t.kill())
   }, [])
 
-  /* ---------- the intro: floodlights → drone swoop → batter walks out, taps the pitch → profile ---------- */
+  /* ---------- sound: the 3D scene reports events, the page decides what is heard ---------- */
+  useEffect(() => {
+    let wickets = 0
+    const offs = [
+      on('wicket', () => {
+        if (store.stage < 3.4 || store.stage > 6.6) return
+        sound.play('stumps')
+        if (wickets++ % 3 === 0) sound.play('cheer')
+      }),
+      on('six', () => Math.abs(store.stage - 7) < 0.6 && sound.play('crack')),
+      on('firework', () => sound.play('firework')),
+      onSectionChange((idx) => {
+        const id = sections[idx]?.id
+        sound.crowd(id === 'hero' ? 0.9 : id === 'matchball' || id === 'contact' ? 0.75 : 0.45)
+        if (store.started && store.intro >= 1) sound.play('whoosh')
+      }),
+    ]
+    const click = (e) => e.target instanceof Element && e.target.closest('a, button') && sound.play('click')
+    document.addEventListener('click', click)
+    return () => {
+      offs.forEach((off) => off())
+      document.removeEventListener('click', click)
+    }
+  }, [])
+
+  /* ---------- the visitor clicked "Enter": this click is what allows audio ---------- */
+  const handleEnter = useCallback((withSound) => {
+    if (withSound) {
+      sound.setEnabled(true)
+      sound.crowd(0.9)
+    }
+  }, [])
+
+  /* ---------- walk-in: batter comes out, takes guard, taps the pitch, profile appears ---------- */
   const startIntro = useCallback(() => {
     setPhase('intro')
     store.started = true
-    const tap = () => !quiet.current && emit('tap')
+    const bang = () => {
+      if (quiet.current) return
+      emit('tap')
+      sound.play('tap')
+    }
     const tl = gsap.timeline({
       onComplete: () => {
         setPhase('live')
@@ -116,60 +155,47 @@ export default function App() {
         ScrollTrigger.refresh()
       },
     })
-
-    // 0 – 3.2 s: dark ground, high drone shot. The four floodlight towers bang on one by one (with a flicker)
-    tl.to(store, { drone: 1, duration: 3.2, ease: 'power2.inOut' }, 0)
-    ;[0, 2, 1, 3].forEach((tower, i) => {
-      const at = 0.35 + i * 0.32
-      tl.set(store.lights, { [tower]: 0.75 }, at)
-        .set(store.lights, { [tower]: 0.12 }, at + 0.06)
-        .set(store.lights, { [tower]: 1 }, at + 0.13)
-    })
-    tl.fromTo('.intro-live', { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.6, ease: 'power3.out' }, 0.3)
-      .fromTo(
-        '.intro-title',
-        { opacity: 0, scale: 1.12, letterSpacing: '0.4em' },
-        { opacity: 1, scale: 1, letterSpacing: '0em', duration: 1.2, ease: 'power3.out' },
-        0.55
+    tl.to(store, { walk: 1, duration: 5, ease: 'none' }, 0)
+      .to(store, { intro: 1, duration: 6.6, ease: 'sine.inOut' }, 0)
+      .fromTo('.intro-l3', { opacity: 0, xPercent: -40 }, { opacity: 1, xPercent: 0, duration: 0.7, ease: 'power3.out' }, 0.6)
+      .to(store, { guard: 1, duration: 0.9, ease: 'power2.inOut' }, 4.85)
+      .to('.intro-l3', { opacity: 0, xPercent: -40, duration: 0.5, ease: 'power2.in' }, 5.2)
+      // two taps on the pitch, then the bat stays grounded
+      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, 5.95)
+      .call(bang, null, 6.09)
+      .to(store, { tap: 0.15, duration: 0.2, ease: 'power2.out' }, 6.12)
+      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, 6.5)
+      .call(bang, null, 6.64)
+      .call(
+        () => {
+          if (quiet.current) return
+          emit('celebrate')
+          sound.play('cheer')
+        },
+        null,
+        6.7
       )
-      .to('.intro-title', { opacity: 0, y: -30, duration: 0.55, ease: 'power2.in' }, 2.45)
-
-      // 1.8 – 8.8 s: the batter walks out; the camera picks him up from behind, then swings round
-      .to(store, { walk: 1, duration: 5, ease: 'none' }, 1.8)
-      .to(store, { intro: 1, duration: 5.6, ease: 'sine.inOut' }, 3.2)
-      .fromTo('.intro-l3', { opacity: 0, xPercent: -40 }, { opacity: 1, xPercent: 0, duration: 0.7, ease: 'power3.out' }, 3.4)
-      .to(store, { guard: 1, duration: 0.9, ease: 'power2.inOut' }, 6.65)
-      .to('.intro-l3', { opacity: 0, xPercent: -40, duration: 0.5, ease: 'power2.in' }, 7.0)
-      // two taps of the bat on the pitch, then it stays grounded
-      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, 7.75)
-      .call(tap, null, 7.89)
-      .to(store, { tap: 0.15, duration: 0.2, ease: 'power2.out' }, 7.92)
-      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, 8.3)
-      .call(tap, null, 8.44)
-      .call(() => !quiet.current && emit('celebrate'), null, 8.5)
       // profile, name and navigation come in
-      .set('.hero-title', { opacity: 1 }, 8.1)
-      .fromTo('.hero-char', { y: 0, yPercent: 110 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: 0.03 }, 8.1)
-      .set('.hero-clip', { overflow: 'visible' }, 9.4) // let the neon glow spread once the letters have landed
-      .fromTo('.hero-fade', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.1 }, 8.4)
-      .fromTo('.nav-intro', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, 8.6)
-      .to('.intro-live', { opacity: 0, duration: 0.5 }, 8.6)
+      .set('.hero-title', { opacity: 1 }, 6.3)
+      .fromTo('.hero-char', { y: 0, yPercent: 110 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: 0.03 }, 6.3)
+      .set('.hero-clip', { overflow: 'visible' }, 7.6) // let the neon glow spread once the letters have landed
+      .fromTo('.hero-fade', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.1 }, 6.6)
+      .fromTo('.nav-intro', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, 6.8)
     intro.current = tl
     window.__intro = tl
-    window.__gsap = gsap // handy for debugging in the console
 
     // scroll-in animations for everything below the hero
     gsap.utils.toArray('[data-reveal]').forEach((el) => {
       const pop = el.dataset.reveal === 'pop'
       gsap.fromTo(
         el,
-        pop ? { opacity: 0, y: 70, rotationX: 16, scale: 0.95, transformOrigin: '50% 100%' } : { opacity: 0, y: 40 },
+        pop ? { opacity: 0, y: 80, rotationX: 18, scale: 0.94, transformOrigin: '50% 100%' } : { opacity: 0, y: 46 },
         {
           opacity: 1,
           y: 0,
           rotationX: 0,
           scale: 1,
-          duration: pop ? 1.0 : 0.9,
+          duration: pop ? 1.05 : 0.95,
           delay: parseFloat(el.dataset.delay || 0),
           ease: pop ? 'back.out(1.3)' : 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' },
@@ -196,21 +222,22 @@ export default function App() {
       </Suspense>
       <Scrim />
 
-      {phase === 'loading' && <Preloader ready={sceneReady} onDone={startIntro} />}
+      {phase === 'loading' && <Preloader ready={sceneReady} onEnter={handleEnter} onDone={startIntro} />}
       <IntroOverlay active={phase === 'intro'} onSkip={skipIntro} />
       <Cursor />
       <Nav />
       <ScoreBug />
-      <WicketFlash />
 
       <main className="ui">
         <Hero />
+        <MatchBall />
         <About />
         <Services />
         <GamePlan />
         <Skills />
         <Career />
         <Projects />
+        <Training />
         <Contact />
       </main>
     </>
