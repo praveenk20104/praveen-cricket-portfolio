@@ -1,15 +1,36 @@
 import { useEffect, useState } from 'react'
 import { onSectionChange, scrollToId } from '../../lib/store'
-import { profile } from '../../data/profile'
+import { sound } from '../../lib/sound'
+import { profile, sections } from '../../data/profile'
 
 const LINKS = [
   { id: 'about', label: 'About' },
+  { id: 'services', label: 'Services' },
   { id: 'skills', label: 'Skills' },
   { id: 'career', label: 'Career' },
   { id: 'projects', label: 'Projects' },
   { id: 'contact', label: 'Contact' },
 ]
-const INDEX = { hero: 0, about: 1, skills: 2, career: 3, projects: 4, contact: 5 }
+const indexOf = (id) => sections.findIndex((s) => s.id === id)
+
+function SoundButton() {
+  const [on, setOn] = useState(false)
+  useEffect(() => sound.subscribe(setOn), [])
+  return (
+    <button
+      onClick={() => sound.setEnabled(!on)}
+      className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white transition hover:border-[#ff1f3d]"
+      aria-label={on ? 'Turn stadium sound off' : 'Turn stadium sound on'}
+      aria-pressed={on}
+      title={on ? 'Sound on' : 'Sound off'}
+    >
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 9v6h4l5 4V5L8 9H4z" />
+        {on ? <path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" stroke="#ff3350" /> : <path d="M17 9.5l4 5M21 9.5l-4 5" />}
+      </svg>
+    </button>
+  )
+}
 
 export default function Nav() {
   const [active, setActive] = useState(0)
@@ -21,11 +42,13 @@ export default function Nav() {
     setOpen(false)
     scrollToId(id)
   }
+  // highlight the last nav link whose section we have reached
+  const current = LINKS.reduce((acc, l) => (indexOf(l.id) <= active ? l.id : acc), null)
 
   return (
     <>
-      <header className="nav-intro pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-4 pt-4 md:pt-6" style={{ opacity: 0 }}>
-        <nav className="glass pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-full py-2 pl-3 pr-2 md:pl-4">
+      <header className="nav-intro pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-3 pt-3 md:px-4 md:pt-5" style={{ opacity: 0 }}>
+        <nav className="glass-strong pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-full py-2 pl-3 pr-2 md:pl-4">
           <a href="#hero" onClick={go('hero')} className="flex items-center gap-3" aria-label="Back to top">
             <span className="relative grid h-9 w-9 place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#ff4a5c,#a50f1b_55%,#3a0408)] shadow-[0_0_18px_rgba(255,31,61,0.55)]">
               <span className="absolute inset-y-1 left-1/2 w-px -translate-x-1/2 border-l border-dashed border-[#f4e9d6]/80" />
@@ -35,19 +58,17 @@ export default function Nav() {
             </span>
           </a>
 
-          <ul className="hidden items-center gap-1 md:flex">
+          <ul className="hidden items-center gap-0.5 lg:flex">
             {LINKS.map((l) => (
               <li key={l.id}>
                 <a
                   href={`#${l.id}`}
                   onClick={go(l.id)}
-                  className={`relative rounded-full px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${
-                    active === INDEX[l.id] ? 'text-white' : 'text-white/55 hover:text-white'
+                  className={`relative rounded-full px-4 py-2 font-mono text-xs uppercase tracking-[0.16em] transition-colors ${
+                    current === l.id ? 'text-white' : 'text-white/75 hover:text-white'
                   }`}
                 >
-                  {active === INDEX[l.id] && (
-                    <span className="absolute inset-0 -z-10 rounded-full bg-[#ff1f3d]/15 ring-1 ring-[#ff1f3d]/50" />
-                  )}
+                  {current === l.id && <span className="absolute inset-0 -z-10 rounded-full bg-[#ff1f3d]/20 ring-1 ring-[#ff1f3d]/60" />}
                   {l.label}
                 </a>
               </li>
@@ -55,16 +76,17 @@ export default function Nav() {
           </ul>
 
           <div className="flex items-center gap-2">
+            <SoundButton />
             <a
               href={profile.resume}
               download
-              className="hidden rounded-full bg-[#ff1f3d] px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-white shadow-[0_0_24px_rgba(255,31,61,0.5)] transition hover:bg-[#ff3b55] sm:inline-block"
+              className="hidden rounded-full bg-[#ff1f3d] px-5 py-2.5 font-mono text-xs uppercase tracking-[0.18em] text-white shadow-[0_0_24px_rgba(255,31,61,0.5)] transition hover:bg-[#ff3b55] sm:inline-block"
             >
               Resume ↓
             </a>
             <button
               onClick={() => setOpen((o) => !o)}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/15 md:hidden"
+              className="grid h-10 w-10 place-items-center rounded-full border border-white/20 lg:hidden"
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
             >
@@ -77,25 +99,20 @@ export default function Nav() {
         </nav>
       </header>
 
-      {/* Mobile menu */}
+      {/* mobile menu */}
       <div
-        className={`glass-strong fixed inset-0 z-30 flex flex-col justify-center px-8 transition-all duration-500 md:hidden ${
+        className={`fixed inset-0 z-30 flex flex-col justify-center bg-[#07030a]/97 px-8 transition-all duration-500 lg:hidden ${
           open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
-        <p className="eyebrow mb-6">Field placements</p>
+        <p className="eyebrow mb-4">Field placements</p>
         {LINKS.map((l, i) => (
-          <a
-            key={l.id}
-            href={`#${l.id}`}
-            onClick={go(l.id)}
-            className="flex items-baseline gap-4 border-b border-white/10 py-4 font-display text-5xl tracking-wide"
-          >
-            <span className="font-mono text-xs text-[#ff1f3d]">0{i + 1}</span>
+          <a key={l.id} href={`#${l.id}`} onClick={go(l.id)} className="flex items-baseline gap-4 border-b border-white/15 py-3.5 font-display text-4xl tracking-wide text-white">
+            <span className="font-mono text-xs text-[#ff3350]">0{i + 1}</span>
             {l.label}
           </a>
         ))}
-        <a href={profile.resume} download className="mt-10 font-mono text-xs uppercase tracking-[0.25em] text-[#ff1f3d]">
+        <a href={profile.resume} download className="mt-8 font-mono text-sm uppercase tracking-[0.2em] text-[#ff3350]">
           Download resume ↓
         </a>
       </div>

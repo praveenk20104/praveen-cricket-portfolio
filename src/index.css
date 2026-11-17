@@ -11,12 +11,39 @@
   --color-ink: #050206;
   --color-neon: #ff1f3d;
   --color-cherry: #b3121f;
-  --color-gold: #d9b25c;
-  --color-chalk: #f4efe9;
+  --color-chalk: #f6f2ec;
 }
 
 :root {
   color-scheme: dark;
+}
+
+/* short landscape screens (phones held sideways) */
+@custom-variant short (@media (max-height: 480px) and (orientation: landscape));
+
+/* One fluid scale for every screen. Everything on the page is sized in rem, so this single
+   rule makes the whole interface grow on big desktops, 4K monitors and Smart TVs (which are
+   viewed from a distance) and stay compact on small phones. */
+html {
+  font-size: clamp(16px, min(0.94vw, 1.67vh), 36px); /* 16px up to ~1700px wide, then grows in step with the screen */
+}
+@media (max-width: 360px) {
+  html {
+    font-size: 15px;
+  }
+}
+@media (max-height: 480px) and (orientation: landscape) {
+  html {
+    font-size: 13.5px;
+  }
+}
+
+/* visible focus for keyboards and TV remotes */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #ff3350;
+  outline-offset: 3px;
+  border-radius: 999px;
 }
 
 html,
@@ -34,15 +61,22 @@ body {
   color: #fff;
 }
 
-/* ------------------------------------------------ 3D canvas layer */
+/* ------------------------------------------------ layers: 3D canvas → scrim → page */
 .webgl {
   position: fixed;
   inset: 0;
   z-index: 0;
   touch-action: pan-y;
 }
-
-/* ------------------------------------------------ UI overlay layer */
+/* darkens the 3D scene behind text-heavy sections so every word stays readable */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 50%, rgba(5, 2, 6, 0.72), rgba(5, 2, 6, 0.9));
+  transition: opacity 0.9s ease;
+}
 .ui {
   position: relative;
   z-index: 10;
@@ -54,25 +88,38 @@ body {
   pointer-events: auto;
 }
 
-/* ------------------------------------------------ Glassmorphism */
+/* ------------------------------------------------ glass panels */
 @utility glass {
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.022) 45%, rgba(255, 40, 70, 0.045));
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: linear-gradient(140deg, rgba(34, 15, 22, 0.74), rgba(14, 7, 10, 0.66) 55%, rgba(48, 10, 20, 0.6));
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 30px 80px -30px rgba(0, 0, 0, 0.85);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 30px 80px -30px rgba(0, 0, 0, 0.9);
 }
 @utility glass-strong {
-  background: linear-gradient(140deg, rgba(20, 8, 14, 0.62), rgba(10, 4, 8, 0.45));
-  -webkit-backdrop-filter: blur(26px) saturate(160%);
-  backdrop-filter: blur(26px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(140deg, rgba(20, 9, 14, 0.86), rgba(9, 4, 7, 0.8));
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 40px 100px -40px rgba(0, 0, 0, 0.9);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 40px 100px -40px rgba(0, 0, 0, 0.95);
 }
+/* slow device detected (see Experience.jsx): swap the live blur for a plain dark panel */
+html.perf-min .glass,
+html.perf-min .glass-strong {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.perf-min .glass {
+  background: linear-gradient(140deg, rgba(36, 15, 22, 0.93), rgba(14, 7, 10, 0.92));
+}
+html.perf-min .glass-strong {
+  background: rgba(12, 6, 9, 0.95);
+}
+
 .neon-edge {
   position: relative;
 }
@@ -82,13 +129,13 @@ body {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(140deg, rgba(255, 31, 61, 0.9), rgba(255, 31, 61, 0) 35%, rgba(255, 31, 61, 0) 65%, rgba(255, 31, 61, 0.7));
+  background: linear-gradient(140deg, rgba(255, 31, 61, 0.95), rgba(255, 31, 61, 0) 35%, rgba(255, 31, 61, 0) 65%, rgba(255, 31, 61, 0.75));
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0.35;
+  opacity: 0.45;
   transition: opacity 0.5s ease;
   pointer-events: none;
 }
@@ -96,30 +143,64 @@ body {
   opacity: 1;
 }
 
-/* ------------------------------------------------ Typography helpers */
+/* ------------------------------------------------ type */
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.28em;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(244, 239, 233, 0.62);
+  color: rgba(246, 242, 236, 0.86);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.9);
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(246, 242, 236, 0.72);
+}
+.body {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: rgba(246, 242, 236, 0.92);
+}
+.h-display {
+  font-family: var(--font-display);
+  line-height: 0.95;
+  letter-spacing: 0.012em;
+  color: #fff;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    0 6px 34px rgba(0, 0, 0, 0.85);
 }
 .neon-text {
   color: #fff;
   text-shadow:
-    0 0 6px rgba(255, 31, 61, 0.65),
-    0 0 22px rgba(255, 31, 61, 0.55),
-    0 0 60px rgba(255, 31, 61, 0.35);
+    0 0 6px rgba(255, 31, 61, 0.7),
+    0 0 22px rgba(255, 31, 61, 0.6),
+    0 0 60px rgba(255, 31, 61, 0.4),
+    0 4px 30px rgba(0, 0, 0, 0.8);
 }
-.text-stroke {
-  color: transparent;
-  -webkit-text-stroke: 2px #ff1f3d;
-  filter: drop-shadow(0 0 10px rgba(255, 31, 61, 0.75)) drop-shadow(0 0 30px rgba(255, 31, 61, 0.35));
+/* solid neon red word (replaces the old hollow outline, which was hard to read) */
+.neon-red {
+  color: #ff3350;
+  text-shadow:
+    0 0 14px rgba(255, 31, 61, 0.75),
+    0 0 44px rgba(255, 31, 61, 0.45),
+    0 4px 26px rgba(0, 0, 0, 0.85);
 }
-@media (max-width: 767px) {
-  .text-stroke {
-    -webkit-text-stroke-width: 1.5px;
-  }
+.chip {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(246, 242, 236, 0.92);
 }
 .red-dot {
   display: inline-block;
@@ -137,38 +218,58 @@ body {
   }
 }
 
-/* Reveal targets start hidden until GSAP takes over */
+/* reveal targets start hidden until GSAP takes over */
 [data-reveal] {
   opacity: 0;
 }
 
-/* ------------------------------------------------ Skill chips (3D labels) */
+/* ------------------------------------------------ broadcast graphics */
+.l3 {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+}
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes scrollcue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(200%);
+  }
+}
+
+/* ------------------------------------------------ skill chips (3D labels) */
 .skill-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   white-space: nowrap;
-  padding: 7px 14px;
+  padding: 0.45rem 0.9rem;
   border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.82rem;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(20, 6, 10, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  color: #fff;
+  background: rgba(20, 6, 10, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   user-select: none;
   transition: opacity 0.2s linear;
 }
 .skill-chip--core {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 1.4rem;
   letter-spacing: 0.05em;
-  padding: 10px 20px;
-  color: #fff;
-  border-color: rgba(255, 31, 61, 0.7);
-  background: rgba(60, 4, 14, 0.55);
+  padding: 0.6rem 1.25rem;
+  border-color: rgba(255, 31, 61, 0.8);
+  background: rgba(60, 4, 14, 0.85);
   box-shadow: 0 0 24px rgba(255, 31, 61, 0.45), inset 0 0 18px rgba(255, 31, 61, 0.25);
   text-shadow: 0 0 12px rgba(255, 31, 61, 0.8);
 }
@@ -180,7 +281,7 @@ body {
   box-shadow: 0 0 10px #ff1f3d;
 }
 
-/* ------------------------------------------------ Custom cursor */
+/* ------------------------------------------------ custom cursor */
 html.has-cursor,
 html.has-cursor * {
   cursor: none !important;
@@ -213,7 +314,7 @@ html.has-cursor * {
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   transition:
     transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
     background-color 0.35s,
@@ -254,12 +355,12 @@ html.has-cursor * {
   opacity: 0;
 }
 
-/* ------------------------------------------------ Shatter effect */
+/* ------------------------------------------------ shatter effect */
 .shard {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.04) 60%, rgba(255, 60, 90, 0.2));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05) 60%, rgba(255, 60, 90, 0.22));
   border-radius: inherit;
   will-change: transform, opacity;
 }
@@ -326,7 +427,7 @@ html.has-cursor * {
   }
 }
 
-/* ------------------------------------------------ Preloader */
+/* ------------------------------------------------ preloader */
 .preloader {
   position: fixed;
   inset: 0;
@@ -360,7 +461,7 @@ html.has-cursor * {
   animation: seam-slide 0.9s linear infinite;
 }
 
-/* Scrollbar */
+/* scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }

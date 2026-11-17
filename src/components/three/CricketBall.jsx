@@ -77,9 +77,8 @@ export default function CricketBall() {
     const s = store.stage
 
     // Visible in hero, hides as the camera flies past, returns for the contact CTA
-    const vis = Math.max(1 - smooth(s, 0.72, 1.05), smooth(s, 4.25, 4.9))
-    const intro = store.intro
-    const scale = vis * (0.35 + 0.65 * intro)
+    const vis = Math.max(smooth(s, 0.3, 0.7) * (1 - smooth(s, 1.42, 1.75)), smooth(s, 8.3, 8.9))
+    const scale = vis
     outer.current.scale.setScalar(Math.max(scale, 0.0001))
     outer.current.visible = scale > 0.002
 
@@ -100,8 +99,8 @@ export default function CricketBall() {
     ringA.current.rotation.z = t * 0.35
     ringB.current.rotation.z = -t * 0.22
     ringA.current.rotation.x = Math.sin(t * 0.4) * 0.12
-    ringMat.opacity = 0.9 * intro
-    ringMatSoft.opacity = 0.45 * intro
+    ringMat.opacity = 0.9 * vis
+    ringMatSoft.opacity = 0.45 * vis
   })
 
   return (
@@ -146,8 +145,7 @@ export default function CricketBall() {
 
       {/* Lighting rig for the hero shot */}
       {/* red neon fills */}
-      <pointLight position={[-2.8, 0.6, 1.0]} color="#ff1f3d" intensity={16} distance={9} decay={2} />
-      <pointLight position={[2.9, -1.0, 0.2]} color="#ff2a48" intensity={10} distance={9} decay={2} />
+      <pointLight position={[-2.6, -0.4, 1.0]} color="#ff1f3d" intensity={22} distance={9} decay={2} />
       {/* rim light from behind for a crisp silhouette */}
       <pointLight position={[0.6, 1.9, -2.0]} color="#ff6070" intensity={34} distance={8} decay={2} />
       {/* white floodlight key, aimed only at the ball */}

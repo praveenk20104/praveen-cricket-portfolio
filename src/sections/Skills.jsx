@@ -1,44 +1,45 @@
-import { coreSkills, extraSkills } from '../data/profile'
+import { coreSkills, skillGroups } from '../data/profile'
+import { Eyebrow, Chips } from '../components/ui/Bits'
 import { isTouch } from '../lib/store'
 
 export default function Skills() {
   return (
-    <section id="skills" className="relative min-h-[150svh] px-5 py-28 md:min-h-screen md:px-12 lg:px-20">
-      <div className="mx-auto flex max-w-7xl flex-col md:min-h-[75vh] md:justify-center">
-        {/* On phones the stumps sit at the top of the screen; the panel scrolls in below them */}
-        <div className="h-[48svh] md:hidden" />
-        <div data-reveal className="glass-strong w-full max-w-xl rounded-3xl p-6 md:p-9">
-          <p className="eyebrow flex items-center gap-3">
-            <span className="font-mono text-[#ff1f3d]">02</span> Defending the stumps
+    <section id="skills" className="relative px-5 py-28 md:px-12 lg:px-16">
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="flex flex-col landscape:min-h-[88vh] landscape:justify-center">
+          {/* on phones the stumps sit at the top of the screen; the panel scrolls in below them */}
+          <div className="h-[46svh] landscape:hidden" />
+          <div data-reveal className="glass-strong w-full max-w-xl rounded-3xl p-6 md:p-9">
+            <Eyebrow no="05">Defending the stumps</Eyebrow>
+            <h2 className="h-display mt-4 text-[clamp(2.5rem,5vw,4.4rem)]">
+              Four skills <span className="neon-red">guard</span> my wicket.
+            </h2>
+            <ul className="mt-6 divide-y divide-white/15">
+              {coreSkills.map((s, i) => (
+                <li key={s.name} className="flex items-baseline gap-4 py-3.5">
+                  <span className="font-mono text-sm font-semibold text-[#ff3350]">0{i + 1}</span>
+                  <div>
+                    <p className="font-display text-2xl tracking-wide text-white md:text-3xl">{s.name}</p>
+                    <p className="label mt-1 !text-white/85">{s.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p data-reveal className="eyebrow mt-5">
+            {isTouch ? 'The skills orbit the stumps above' : '↔ Move your mouse: the skills orbit the stumps'}
           </p>
-          <h2 className="mt-4 font-display text-[clamp(2.4rem,5vw,4.4rem)] leading-[0.92] tracking-wide">
-            Four skills <span className="text-stroke">guard</span> my wicket.
-          </h2>
-
-          <ul className="mt-8 divide-y divide-white/10">
-            {coreSkills.map((s, i) => (
-              <li key={s.name} className="flex items-baseline gap-4 py-4">
-                <span className="font-mono text-xs text-[#ff1f3d]">0{i + 1}</span>
-                <div>
-                  <p className="font-display text-2xl tracking-wide md:text-3xl">{s.name}</p>
-                  <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-white/55">{s.detail}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <p className="eyebrow mt-6">Also in the kit bag</p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {extraSkills.map((s) => (
-              <li key={s} className="rounded-full border border-white/12 bg-white/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white/70">
-                {s}
-              </li>
-            ))}
-          </ul>
         </div>
-        <p data-reveal className="eyebrow mt-6">
-          {isTouch ? '↔ Swipe to spin the ball' : '↔ Move your mouse — the skills orbit the stumps'}
-        </p>
+
+        <p data-reveal className="eyebrow mt-16">The full kit bag</p>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {skillGroups.map((g, i) => (
+            <div key={g.title} data-reveal data-delay={(i % 3) * 0.08} className="glass-strong rounded-3xl p-6">
+              <h3 className="font-display text-2xl tracking-wide text-white">{g.title}</h3>
+              <Chips items={g.items} className="mt-4" />
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

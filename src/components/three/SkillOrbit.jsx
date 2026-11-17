@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -15,6 +15,8 @@ export default function SkillOrbit() {
   const els = useRef([])
   const lastVis = useRef(-1)
   const rot = useRef({ y: 0, x: 0 })
+  const [active, setActive] = useState(false)
+  const activeRef = useRef(false)
 
   const items = useMemo(() => {
     const core = orbitSkills.core.map((name, i) => ({
@@ -39,7 +41,14 @@ export default function SkillOrbit() {
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05)
     const t = state.clock.elapsedTime
-    const vis = THREE.MathUtils.clamp(1 - (Math.abs(store.stage - 2) - 0.3) / 0.4, 0, 1)
+    const vis = THREE.MathUtils.clamp(1 - (Math.abs(store.stage - 5) - 0.3) / 0.4, 0, 1)
+    const want = vis > 0.001
+    if (want !== activeRef.current) {
+      activeRef.current = want
+      lastVis.current = -1
+      setActive(want)
+    }
+    if (!want) return
 
     rot.current.y = damp(rot.current.y, store.mouse.x * 0.9, 3, dt)
     rot.current.x = damp(rot.current.x, store.mouse.y * 0.12, 3, dt)
@@ -52,7 +61,7 @@ export default function SkillOrbit() {
       n.position.set(Math.cos(it.a) * it.r, it.y + Math.sin(t * 0.9 + it.phase) * 0.06, Math.sin(it.a) * it.r)
     })
 
-    if (Math.abs(vis - lastVis.current) > 0.01) {
+    if (els.current[0] && Math.abs(vis - lastVis.current) > 0.01) {
       lastVis.current = vis
       els.current.forEach((el) => {
         if (!el) return
@@ -65,7 +74,7 @@ export default function SkillOrbit() {
   return (
     <group position={[0, 0, WICKET_Z]}>
       <group ref={group}>
-        {items.map((it, i) => (
+        {active && items.map((it, i) => (
           <group key={it.name} ref={(el) => (nodes.current[i] = el)}>
             <Html center distanceFactor={it.core ? 3.2 : 3.4} zIndexRange={[30, 0]}>
               <div

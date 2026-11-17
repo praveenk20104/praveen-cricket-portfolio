@@ -8,6 +8,9 @@ import CricketBall from './CricketBall'
 import Wicket from './Wicket'
 import SkillOrbit from './SkillOrbit'
 import Particles from './Particles'
+import Batsman from './Batsman'
+import SixShots from './SixShots'
+import Fireworks from './Fireworks'
 import Effects from './Effects'
 import { store, isTouch } from '../../lib/store'
 
@@ -37,10 +40,62 @@ function Reflections() {
   )
 }
 
-export default function Experience({ onReady }) {
-  const [quality, setQuality] = useState(isTouch ? 'low' : 'high')
-  const [dpr, setDpr] = useState(isTouch ? 1.5 : 2)
+// Quality ladder. The site starts in the middle and moves itself up or down
+// depending on the real frame rate of the visitor's device.
+//   low    = bloom + grain only, no shadows, no light beams, no glass blur
+//   medium = + anti-aliasing + shadows
+//   high   = + depth of field + chromatic aberration
+// Each level also has a pixel budget (px). The 3D picture is rendered at whatever resolution
+// fits that budget and then stretched to the screen, so a 4K Smart TV, an iPad and a small
+// laptop all give the graphics chip the same amount of work.
+const TIERS = isTouch
+  ? [{ q: 'low', px: 0.45e6 }, { q: 'low', px: 0.8e6 }, { q: 'low', px: 1.3e6 }]
+  : [{ q: 'low', px: 0.9e6 }, { q: 'low', px: 1.5e6 }, { q: 'medium', px: 2.6e6 }, { q: 'high', px: 4.6e6 }]
+const START = isTouch ? 1 : 2
+// Optional manual override for testing: add ?q=low, ?q=medium or ?q=high to the URL
+const FORCED = (() => {
+  const q = new URLSearchParams(window.location.search).get('q')
+  for (let i = TIERS.length - 1; i >= 0; i--) if (TIERS[i].q === q) return i
+  return null
+})()
+
+// Laptops with built-in graphics and older phones start one step lower, so the first
+// seconds are already smooth. If the device turns out to be fast, it climbs back up.
+function isWeakGpu(ctx) {
+  try {
+    const ext = ctx.getExtension('WEBGL_debug_renderer_info')
+    const name = ext ? String(ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''
+    return /swiftshader|llvmpipe|basic render|intel(?!.*\barc\b)|mali-(t|4|g3|g5)|adreno \(tm\) [1-5]\d\d|powervr/i.test(name)
+  } catch {
+    return false
+  }
+}
+
+export default function Experience({ onReady, started }) {
+  const [level, setLevel] = useState(FORCED ?? START)
+  const ceiling = useRef(TIERS.length - 1)
+  const tier = TIERS[level]
+  const quality = tier.q
+  const [area, setArea] = useState(() => window.innerWidth * window.innerHeight)
+  useEffect(() => {
+    let t
+    const onResize = () => {
+      clearTimeout(t)
+      t = setTimeout(() => setArea(window.innerWidth * window.innerHeight), 200)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+  const dpr = Math.round(THREE.MathUtils.clamp(Math.sqrt(tier.px / area), 0.5, Math.min(window.devicePixelRatio || 1, 2)) * 100) / 100
+  const lite = level < START // the device has struggled: switch off the expensive extras
   const wrap = useRef()
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('perf-min', lite)
+  }, [lite])
 
   // Drag / swipe to spin the ball (horizontal swipes don't block vertical page scroll)
   useEffect(() => {
@@ -78,28 +133,39 @@ export default function Experience({ onReady }) {
   return (
     <div ref={wrap} className="webgl" aria-hidden="true">
       <Canvas
-        dpr={[1, dpr]}
+        dpr={dpr}
         shadows={isTouch ? false : 'percentage'}
-        camera={{ fov: 42, near: 0.1, far: 450, position: [0, 6, 26] }}
+        camera={{ fov: 42, near: 0.1, far: 450, position: [6.27, 1.45, -16.6] }}
         gl={{ antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.NoToneMapping
+          if (FORCED === null && isWeakGpu(gl.getContext())) setLevel(START - 1)
         }}
       >
         <color attach="background" args={['#050206']} />
         <fog attach="fog" args={['#050206', 32, 175]} />
-        <PerformanceMonitor
-          onDecline={() => {
-            setQuality('low')
-            setDpr(1)
-          }}
-        />
+        {started && FORCED === null && (
+          <PerformanceMonitor
+            bounds={(refresh) => (refresh > 90 ? [50, 85] : [50, 58])}
+            onDecline={() =>
+              setLevel((l) => {
+                const next = Math.max(0, l - 1)
+                ceiling.current = next // never climb back above a level that was too slow
+                return next
+              })
+            }
+            onIncline={() => setLevel((l) => Math.min(ceiling.current, l + 1))}
+          />
+        )}
         <Suspense fallback={null}>
           <Reflections />
           <CameraRig />
-          <Stadium shadows={!isTouch} />
+          <Stadium shadows={!isTouch && quality !== 'low'} beams={!lite} />
+          <Batsman />
           <CricketBall />
           <Wicket />
+          <SixShots />
+          <Fireworks />
           <SkillOrbit />
           <Particles />
           <Effects quality={quality} />

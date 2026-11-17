@@ -6,10 +6,13 @@ const MIN_TIME = 2200
 const R = 64
 const CIRC = 2 * Math.PI * R
 
-// Loader: a cricket ball spins in the middle while the seam stitches around it fill up as the progress bar
-export default function Preloader({ ready, onDone }) {
+// Loader: a cricket ball spins in the middle while the seam stitches around it fill up as the
+// progress bar. At 100% the visitor chooses to enter with or without stadium sound
+// (browsers only allow audio after a click, so this click is what switches it on).
+export default function Preloader({ ready, onEnter, onDone }) {
   const [pct, setPct] = useState(0)
   const [msg, setMsg] = useState(0)
+  const [gate, setGate] = useState(false)
   const root = useRef()
   const readyRef = useRef(ready)
   const finished = useRef(false)
@@ -33,10 +36,7 @@ export default function Preloader({ ready, onDone }) {
       if (cap === 100 && goal - value < 0.8) value = 100
       setPct(value)
       if (value >= 100) {
-        if (!finished.current) {
-          finished.current = true
-          exit()
-        }
+        setGate(true)
         return
       }
       raf = requestAnimationFrame(tick)
@@ -50,7 +50,10 @@ export default function Preloader({ ready, onDone }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const exit = () => {
+  const enter = (withSound) => {
+    if (finished.current) return
+    finished.current = true
+    onEnter?.(withSound)
     const q = gsap.utils.selector(root)
     gsap
       .timeline({ onComplete: () => onDone?.() })
@@ -69,7 +72,7 @@ export default function Preloader({ ready, onDone }) {
       <div className="pl-line absolute left-0 right-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#ff1f3d] to-transparent opacity-60" />
 
       <div className="pl-center relative flex flex-col items-center gap-8">
-        <svg width="190" height="190" viewBox="-95 -95 190 190" className="overflow-visible">
+        <svg viewBox="-95 -95 190 190" className="h-[11.9rem] w-[11.9rem] overflow-visible">
           <defs>
             <radialGradient id="pl-ball" cx="35%" cy="30%" r="75%">
               <stop offset="0%" stopColor="#ff4a5c" />
@@ -125,13 +128,34 @@ export default function Preloader({ ready, onDone }) {
           <ellipse cx="-14" cy="-18" rx="12" ry="7" fill="rgba(255,255,255,0.22)" transform="rotate(-30 -14 -18)" />
         </svg>
 
-        <div className="text-center">
-          <div className="font-display text-6xl tabular-nums tracking-wide text-white">
-            {String(shown).padStart(2, '0')}
-            <span className="text-[#ff1f3d]">%</span>
+        {!gate ? (
+          <div className="text-center">
+            <div className="font-display text-6xl tabular-nums tracking-wide text-white">
+              {String(shown).padStart(2, '0')}
+              <span className="text-[#ff1f3d]">%</span>
+            </div>
+            <p className="eyebrow mt-3 h-4">{MESSAGES[msg]}…</p>
           </div>
-          <p className="eyebrow mt-3 h-4">{MESSAGES[msg]}…</p>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="eyebrow">The batter is padded up</p>
+            <button
+              data-enter="sound"
+              autoFocus
+              onClick={() => enter(true)}
+              className="cta-btn relative px-9 py-4 font-mono text-sm uppercase tracking-[0.22em] text-white shadow-[0_0_50px_rgba(255,31,61,0.55)]"
+            >
+              Enter the stadium · sound on
+            </button>
+            <button
+              data-enter="mute"
+              onClick={() => enter(false)}
+              className="font-mono text-xs uppercase tracking-[0.2em] text-white/70 underline-offset-4 hover:text-white hover:underline"
+            >
+              Enter without sound
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

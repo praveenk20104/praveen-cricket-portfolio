@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PITCH, createBallTextures } from './textures'
-import { store, reducedMotion } from '../../lib/store'
+import { store, emit, reducedMotion } from '../../lib/store'
 
 // Real-world dimensions (metres)
 const STUMP_H = 0.711
@@ -124,6 +124,7 @@ export default function Wicket() {
     ballV: new THREE.Vector3(),
     ballP: new THREE.Vector3(),
     hitDone: false,
+    t0: null,
   }).current
 
   // Spark burst geometry
@@ -166,7 +167,7 @@ export default function Wicket() {
     return g
   }, [])
   const trailUniforms = useMemo(
-    () => ({ uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }, uOpacity: { value: 1 } }),
+    () => ({ uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }, uOpacity: { value: 0 } }),
     []
   )
 
@@ -186,12 +187,28 @@ export default function Wicket() {
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05)
-    if (!store.started || reducedMotion) {
-      ball.current.visible = false
-      trailUniforms.uOpacity.value = 0
+    sparkUniforms.uAge.value += dt
+    // deliveries only run while the batter is off the field (sections 3 → 8)
+    const bowling = store.started && !reducedMotion && store.stage > 2.6 && store.stage < 8.4
+    if (!bowling) {
+      sim.t0 = null
+      if (sim.cycle !== -1) {
+        sim.cycle = -1
+        ball.current.visible = false
+        trailUniforms.uOpacity.value = 0
+        sim.bails.forEach((b, i) => {
+          b.rest = true
+          refs.bails[i]?.position.set(BAIL_X[i], BAIL_Y, 0)
+          refs.bails[i]?.rotation.set(0, 0, Math.PI / 2)
+        })
+        refs.stumps.forEach((s) => s?.rotation.set(0, 0, 0))
+        mats.stump.emissiveIntensity = 2.4
+        mats.bail.emissiveIntensity = 3.4
+      }
       return
     }
-    const time = state.clock.elapsedTime
+    if (sim.t0 == null) sim.t0 = state.clock.elapsedTime - 0.6 // first ball shortly after the camera arrives
+    const time = state.clock.elapsedTime - sim.t0
     const cycle = Math.floor(time / PERIOD)
     const t = time - cycle * PERIOD
 
@@ -207,6 +224,7 @@ export default function Wicket() {
         b.rest = true
       })
       resetTrail(RELEASE)
+      emit('delivery', 132 + Math.random() * 16) // speed-gun reading, km/h
     }
 
     // --- Ball flight ---
@@ -230,6 +248,7 @@ export default function Wicket() {
           b.w.set((Math.random() - 0.5) * 18, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 22)
         })
         sparkUniforms.uAge.value = 0
+        emit('wicket')
       }
       const a = t - T_HIT
       sim.ballV.y += G * dt
@@ -292,8 +311,6 @@ export default function Wicket() {
     mats.stump.emissiveIntensity = 2.4 + flash * 9
     mats.bail.emissiveIntensity = 3.4 + flash * 8
     if (glow.current) glow.current.intensity = 6 + flash * 60
-
-    sparkUniforms.uAge.value += dt
   })
 
   return (
@@ -306,7 +323,6 @@ export default function Wicket() {
       <Stumps z={-WICKET_Z} mats={{ stump: mats.dim, bail: mats.dimBail }} />
 
       <pointLight ref={glow} position={[0, 0.9, WICKET_Z + 0.9]} color="#ff1f3d" intensity={6} distance={6} decay={2} />
-      <pointLight position={[0, 0.9, -WICKET_Z - 0.9]} color="#ff1f3d" intensity={3} distance={5} decay={2} />
 
       {/* Delivery ball */}
       <mesh ref={ball} castShadow visible={false}>
