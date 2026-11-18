@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createBallTextures } from './textures'
 import { store, isTouch } from '../../lib/store'
+import { SwingTrails, TextRing } from './BallFx'
 
 export const BALL_POS = new THREE.Vector3(0, 2.2, 9)
 
@@ -80,7 +81,7 @@ export default function CricketBall() {
     const vis = Math.max(smooth(s, 0.3, 0.7) * (1 - smooth(s, 1.42, 1.75)), smooth(s, 8.3, 8.9))
     const scale = vis
     outer.current.scale.setScalar(Math.max(scale, 0.0001))
-    outer.current.visible = scale > 0.002
+    outer.current.visible = scale > 0.002 || store.prewarm
 
     // Drag / swipe momentum
     store.spin.x *= Math.exp(-2.2 * dt)
@@ -134,6 +135,9 @@ export default function CricketBall() {
           <Stitches />
         </group>
       </group>
+
+      <SwingTrails visibility={() => Math.min(1, outer.current.scale.x)} />
+      <TextRing />
 
       {/* Neon halo rings behind the ball */}
       <mesh ref={ringA} position-z={-0.6} material={ringMat}>

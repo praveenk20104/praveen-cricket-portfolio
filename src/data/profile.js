@@ -23,17 +23,21 @@ export const playerCard = [
   { k: 'Role', v: 'Data Analyst · Power BI Developer · MIS Analyst' },
   { k: 'Current team', v: 'Rahul Trivedi & Associates' },
   { k: 'Based in', v: 'New Delhi, India' },
-  { k: 'In the middle since', v: 'January 2025' },
+  { k: 'Experience', v: '2+ years in data & MIS' },
   { k: 'Degree', v: 'BCA · IGNOU' },
   { k: 'Go-to shots', v: 'Python · SQL · Power BI · Excel' },
 ]
 
-export const stats = [
-  { value: '9,000+', label: 'Apps analysed' },
-  { value: '4B+', label: 'Reviews mined' },
-  { value: '4', label: 'BI dashboards shipped' },
-  { value: '1.5+', label: 'Years in data roles' },
-]
+// "The new ball" section: what I do, in plain words (no project figures here)
+export const newBall = {
+  plain: 'In simple words: I turn a company’s raw data into clear reports and dashboards, so people can make better decisions, faster.',
+  experience: '2+',
+  balls: [
+    { title: 'Collect & clean', text: 'I gather data from Excel, Google Sheets and databases, and fix the errors and gaps.' },
+    { title: 'Find the story', text: 'I study the numbers to spot trends, problems and chances to grow.' },
+    { title: 'Show it clearly', text: 'I build dashboards and automatic reports that anyone in the team can read.' },
+  ],
+}
 
 export const strengths = ['Analytical thinking', 'Problem-solving', 'Critical thinking', 'Communication', 'Attention to detail']
 
@@ -70,11 +74,11 @@ export const services = [
 
 // How a piece of work moves from raw data to a decision
 export const gamePlan = [
-  { over: '01', title: 'Read the conditions', text: 'Understand the business question, then pull the right data with SQL queries, joins and extracts.', tools: 'MySQL · SQL · Excel' },
-  { over: '02', title: 'Prepare the pitch', text: 'Data cleaning, preprocessing, validation and transformation, so every number can be trusted.', tools: 'Pandas · NumPy · Power Query' },
-  { over: '03', title: 'Build the innings', text: 'Exploratory, statistical, trend and KPI analysis to find the patterns that matter.', tools: 'Python · EDA · Matplotlib' },
-  { over: '04', title: 'Play the big shots', text: 'Interactive dashboards and visual reports that make the story obvious at a glance.', tools: 'Power BI · DAX · Looker Studio · Tableau' },
-  { over: '05', title: 'Finish the match', text: 'Automated weekly MIS reports and workflows, presented to management for reviews and planning.', tools: 'Google Sheets · Excel · Gemini · Claude' },
+  { over: '1', title: 'Read the conditions', text: 'Understand the question, pull the right data.', tools: 'SQL · Excel' },
+  { over: '2', title: 'Prepare the pitch', text: 'Clean and check the data so it can be trusted.', tools: 'Pandas · Power Query' },
+  { over: '3', title: 'Build the innings', text: 'Find the trends and KPIs that matter.', tools: 'Python · EDA' },
+  { over: '4', title: 'Big shots', text: 'Dashboards that tell the story at a glance.', tools: 'Power BI · Looker' },
+  { over: '5', title: 'Finish the match', text: 'Automated MIS reports for management.', tools: 'Sheets · Gemini' },
 ]
 
 export const coreSkills = [
@@ -132,11 +136,13 @@ export const career = [
 ]
 
 export const education = [
+  { title: 'Master of Computer Applications (MCA)', org: 'Pursuing', period: '2025 – Present' },
   { title: 'Bachelor of Computer Applications (BCA)', org: 'Indira Gandhi National Open University (IGNOU)', period: '2021 – 2025' },
   { title: 'Class XII (CBSE)', org: 'Govt. Co-Ed Sr. Sec. School, Rohini', period: '2021' },
 ]
 
 export const certifications = [
+  { title: 'Advanced MIS Program', org: 'Rahul Jain · Business Coaching India', period: '' },
   { title: 'Data Science & Analytics Training', org: 'Ducat Education', period: 'Feb 2024 – May 2025' },
   { title: 'Python (Basic)', org: 'HackerRank', period: 'Jul 2025' },
   { title: 'SQL (Basic)', org: 'HackerRank', period: 'Jul 2025' },

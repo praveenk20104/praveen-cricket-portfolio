@@ -1,8 +1,8 @@
-# Praveen Kumar: 3D Cricket Portfolio (v2)
+# Praveen Kumar: 3D Cricket Portfolio (v5)
 
-A night match in a WebGL stadium. The visitor clicks **Enter the stadium**, a batter in India blue (PRAVEEN, No. 19) walks out under the floodlights, takes guard and taps the pitch, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the match ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (with sixes flying over the boundary), the training camp (big screen and fireworks) and the final "Next innings" call to action.
+A night match in a WebGL stadium. The intro opens on a drone shot as the floodlights switch on one tower at a time, dives down behind a batter in India blue (PRAVEEN, No. 19) and walks out with him. He takes guard and taps the pitch, a new ball drops from the sky and knocks into the pitch with a neon shockwave, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the new ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (sixes flying over the boundary), the training camp (big screen and fireworks) and the "Next innings" chase graphic with a ring of LED text circling the ball.
 
-**Stack:** Vite · React 19 · Tailwind CSS v4 · Three.js + React Three Fiber + Drei · @react-three/postprocessing · GSAP ScrollTrigger · Lenis · Web Audio API
+**Stack:** Vite · React 19 · Tailwind CSS v4 · Three.js + React Three Fiber + Drei · @react-three/postprocessing · GSAP ScrollTrigger · Lenis
 
 ---
 
@@ -42,26 +42,27 @@ public/
   models/batsman.glb         motion-captured figure (walk + idle clips), 0.8 MB
   projects/*.jpg             real dashboard screenshots
 src/
-  App.jsx                    smooth scroll, section → camera stage, walk-in timeline, sound wiring
+  App.jsx                    smooth scroll, section → camera stage, the intro timeline
   data/profile.js            ALL content
   lib/store.js               shared state + event bus between the page and the 3D scene
-  lib/sound.js               stadium sound, synthesised with the Web Audio API (no audio files)
   lib/shatter.js             glass-shatter effect for the project screenshots
   components/three/
     Experience.jsx           <Canvas>, reflections, automatic quality ladder
-    CameraRig.jsx            walk-in camera move + scroll-driven camera path (10 shots)
+    CameraRig.jsx            drone shot, dive-and-follow walk-in, scroll-driven camera path (10 shots)
+    IntroBall.jsx            the ball that knocks the pitch (bounces, shockwaves, dust)
+    BallFx.jsx               swing trails round the match ball + the "next innings" LED text ring
     Batsman.jsx              the batter: printed shirt, helmet, pads, gloves and bat built in code; walk, guard, bat tap
     CricketBall.jsx          match ball: procedural leather, raised seam, 576 stitches, gold stamp
     Wicket.jsx               neon stumps, looping delivery, flying bails, sparks, speed-gun event
     SixShots.jsx             "wagon wheel": glowing sixes launched from the crease
     Fireworks.jsx            fireworks above the stands
-    Stadium.jsx              pitch, outfield, rope, stands, crowd flashes, floodlights, big LED screen
+    Stadium.jsx              pitch, outfield, rope, LED boundary boards, stands, Mexican wave, floodlights that switch on, big LED screen
     SkillOrbit.jsx           skills floating around the stumps
     Particles.jsx, Effects.jsx, textures.js
   components/ui/
-    Preloader.jsx            seam loader + "enter with / without sound"
-    IntroOverlay.jsx         broadcast lower-third + skip button
-    Nav.jsx, ScoreBug.jsx    navigation with sound toggle, TV strip with over count and ball speed
+    Preloader.jsx            seam loader
+    IntroOverlay.jsx         "Under the lights" opener, lower-third, skip button
+    Nav.jsx, ScoreBug.jsx    navigation, TV strip with over count and ball speed
     Scrim.jsx                keeps text readable over the 3D scene
     Cursor.jsx, Magnetic.jsx custom cursor (bat over projects), magnetic buttons
   sections/                  Hero, MatchBall, About, Services, GamePlan, Skills, Career, Projects, Training, Contact
@@ -82,7 +83,6 @@ Layouts follow the screen's **shape** (portrait or landscape), not just its widt
 ## 6. Notes
 
 - **The batter** uses the "X Bot" motion-capture figure from Adobe Mixamo (free for commercial use inside a project). His kit is generated in code: an original design in India colours (blue with saffron trim) with PRAVEEN and 19 printed on the back. It deliberately carries no board crest or sponsor logos. The walk-in camera follows him from behind first, so the name and number are seen. To use a custom character later, replace `public/models/batsman.glb` with any Mixamo-rigged GLB that has clips named `walk` and `idle`.
-- **Sound** only starts after the visitor clicks "Enter the stadium · sound on" (browsers block audio before a click). It can be switched on or off from the speaker button in the navigation.
-- **The walk-in** plays once per browser tab. Reloading goes straight to the hero. "Skip intro" is always available.
-- **Performance:** the site measures the real frame rate and moves between quality levels (low / medium / high). Laptops with built-in graphics and older phones start on the light level and only climb if they stay smooth. On the light level glass blur, shadows and light beams are off. Add `?q=low`, `?q=medium` or `?q=high` to the URL to test a level by hand.
+- **The intro** plays once per browser tab (about 10 seconds). Reloading goes straight to the hero. "Skip intro" is always available.
+- **Performance:** panels are solid instead of blurred (a blur over a live 3D scene is re-computed every frame, the biggest cause of lag). While the loader is on screen every shader is compiled once, so nothing stutters later when a new effect appears. Devices with few CPU cores, little memory or built-in graphics start on a lighter level. The site also measures the real frame rate and moves between quality levels (low / medium / high). Laptops with built-in graphics and older phones start on the light level and only climb if they stay smooth. On the light level glass blur, shadows and light beams are off. Add `?q=low`, `?q=medium` or `?q=high` to the URL to test a level by hand.
 - Respects `prefers-reduced-motion` (no walk-in, no deliveries, no fireworks).

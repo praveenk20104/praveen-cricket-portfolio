@@ -2,7 +2,9 @@
 // The scene reads it every frame (no React re-renders = smooth frame rate).
 export const store = {
   stage: 0, // continuous scroll stage: 0 = hero … 9 = contact
-  intro: 0, // 0 → 1 camera move during the walk-in
+  flood: 0, // 0 → 1 floodlights switch on, one tower at a time (drone shot)
+  intro: 0, // 0 → 1 camera dives down and follows the batter to the hero shot
+  prewarm: true, // while the loader covers the screen, everything is drawn once so no shader compiles later
   walk: 0, // 0 → 1 batsman's progress from the boundary to the crease
   guard: 0, // 0 → 1 batsman settles into his stance
   tap: 0, // 0 → 1 bat pressed onto the pitch
@@ -32,8 +34,8 @@ export function onSectionChange(fn) {
 }
 
 /* ---------- small event bus: the 3D scene tells the page what just happened ---------- */
-// events: 'tap' (bat hits pitch), 'wicket' (stumps broken), 'delivery' (ball released, payload = km/h),
-//         'six' (ball launched), 'firework'
+// events: 'tap' (bat hits pitch), 'knock' (intro ball dropped; payload true = place it at rest),
+//         'wicket' (stumps broken), 'delivery' (ball released, payload = km/h), 'six', 'firework', 'celebrate'
 const bus = {}
 export function on(name, fn) {
   ;(bus[name] ||= new Set()).add(fn)

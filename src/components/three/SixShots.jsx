@@ -78,7 +78,7 @@ export default function SixShots() {
 
   useFrame((state) => {
     const active = !reducedMotion && Math.abs(store.stage - 7) < 0.85
-    group.current.visible = active
+    group.current.visible = active || store.prewarm
     if (!active) return
     const t = state.clock.elapsedTime
     const pos = trail.attributes.position

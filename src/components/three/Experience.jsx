@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, PerformanceMonitor } from '@react-three/drei'
 import * as THREE from 'three'
 import CameraRig from './CameraRig'
@@ -11,18 +11,26 @@ import Particles from './Particles'
 import Batsman from './Batsman'
 import SixShots from './SixShots'
 import Fireworks from './Fireworks'
+import IntroBall from './IntroBall'
 import Effects from './Effects'
 import { store, isTouch } from '../../lib/store'
 
-function ReadySignal({ onReady }) {
+// Runs while the loader still covers the screen: every object is made visible and every shader
+// is compiled now, so nothing stutters later when a new effect appears for the first time.
+function Prewarm({ onReady }) {
+  const { gl, scene, camera } = useThree()
   const frames = useRef(0)
-  const done = useRef(false)
   useFrame(() => {
-    frames.current++
-    if (!done.current && frames.current > 3) {
-      done.current = true
-      onReady?.()
+    const f = ++frames.current
+    if (f === 2) {
+      try {
+        gl.compile(scene, camera)
+      } catch {
+        /* older drivers: the frames below still warm everything up */
+      }
     }
+    if (f === 8) store.prewarm = false
+    if (f === 11) onReady?.()
   })
   return null
 }
@@ -61,6 +69,9 @@ const FORCED = (() => {
 
 // Laptops with built-in graphics and older phones start one step lower, so the first
 // seconds are already smooth. If the device turns out to be fast, it climbs back up.
+// Few CPU cores or little memory also means a modest device
+const lowSpec = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4
+
 function isWeakGpu(ctx) {
   try {
     const ext = ctx.getExtension('WEBGL_debug_renderer_info')
@@ -139,7 +150,7 @@ export default function Experience({ onReady, started }) {
         gl={{ antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.NoToneMapping
-          if (FORCED === null && isWeakGpu(gl.getContext())) setLevel(START - 1)
+          if (FORCED === null) setLevel(Math.max(0, START - (isWeakGpu(gl.getContext()) ? 1 : 0) - (lowSpec ? 1 : 0)))
         }}
       >
         <color attach="background" args={['#050206']} />
@@ -160,8 +171,9 @@ export default function Experience({ onReady, started }) {
         <Suspense fallback={null}>
           <Reflections />
           <CameraRig />
-          <Stadium shadows={!isTouch && quality !== 'low'} beams={!lite} />
+          <Stadium shadows={quality === 'high'} beams={!lite} />
           <Batsman />
+          <IntroBall />
           <CricketBall />
           <Wicket />
           <SixShots />
@@ -169,7 +181,7 @@ export default function Experience({ onReady, started }) {
           <SkillOrbit />
           <Particles />
           <Effects quality={quality} />
-          <ReadySignal onReady={onReady} />
+          <Prewarm onReady={onReady} />
         </Suspense>
       </Canvas>
     </div>

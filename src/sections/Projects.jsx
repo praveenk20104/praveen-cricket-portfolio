@@ -3,7 +3,6 @@ import { projects, profile } from '../data/profile'
 import { Eyebrow, Chips } from '../components/ui/Bits'
 import { isTouch, reducedMotion } from '../lib/store'
 import { shatter } from '../lib/shatter'
-import { sound } from '../lib/sound'
 
 function ProjectRow({ project: p, flip }) {
   const shot = useRef()
@@ -20,7 +19,6 @@ function ProjectRow({ project: p, flip }) {
       last.current = now
       const r = el.getBoundingClientRect()
       shatter(el, layer.current, e.clientX - r.left, e.clientY - r.top)
-      sound.play('crack')
     }
     el.addEventListener('mouseenter', enter)
     return () => el.removeEventListener('mouseenter', enter)

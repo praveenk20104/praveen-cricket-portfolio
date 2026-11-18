@@ -6,7 +6,7 @@ function Card({ tag, item }) {
     <li data-reveal className="glass-strong rounded-3xl p-6">
       <div className="flex items-center justify-between gap-4">
         <span className="rounded-md bg-[#ff1f3d]/20 px-2 py-1 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[#ff7083] ring-1 ring-[#ff1f3d]/50">{tag}</span>
-        <span className="label">{item.period}</span>
+        {item.period && <span className="label">{item.period}</span>}
       </div>
       <h3 className="mt-4 font-display text-2xl leading-tight tracking-wide text-white md:text-[1.7rem]">{item.title}</h3>
       <p className="mt-1.5 text-base text-white/90">{item.org}</p>

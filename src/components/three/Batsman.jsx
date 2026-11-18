@@ -12,6 +12,8 @@ const MODEL = './models/batsman.glb'
 
 export const WALK_FROM = new THREE.Vector3(4.6, 0, -14.6)
 export const GUARD_AT = new THREE.Vector3(-0.3, 0, -8.75)
+export const WALK_TIME = 4.4 // seconds; App.jsx uses the same value for the walk-in tween
+const WALK_DIST = WALK_FROM.distanceTo(GUARD_AT)
 const WALK_HEADING = Math.atan2(GUARD_AT.x - WALK_FROM.x, GUARD_AT.z - WALK_FROM.z)
 const GUARD_HEADING = 0.42 // turned slightly towards the camera
 const BAT_TILT = 0.6 // how far the bat points forward of the arm while carried (radians)
@@ -432,7 +434,8 @@ export default function Batsman() {
     idle.play()
     walk.play()
     walk.setEffectiveWeight(0)
-    walk.timeScale = 0.98 // stride speed (1.56 m/s) matched to the walk-in path, so the feet don't slide
+    // stride matched to the walk-in (7.6 m in 4.4 s = 1.73 m/s; the clip walks at 1.56 m/s), so the feet don't slide
+    walk.timeScale = WALK_DIST / WALK_TIME / 1.557
     return { mixer, idle, walk, w: 0 }
   }, [scene, animations])
   const shadowTex = useMemo(() => blobTexture(), [])
@@ -474,7 +477,7 @@ export default function Batsman() {
     const dt = Math.min(delta, 0.05)
     dustUniforms.uAge.value += dt
     const group = root.current
-    const show = store.stage < 1.9
+    const show = store.stage < 1.9 || store.prewarm
     group.visible = show
     keyLight.current.intensity = show ? 75 : 0
     if (!show) return

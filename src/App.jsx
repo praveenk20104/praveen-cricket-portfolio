@@ -19,14 +19,14 @@ import Projects from './sections/Projects'
 import Training from './sections/Training'
 import Contact from './sections/Contact'
 import { sections } from './data/profile'
-import { emit, on, onSectionChange, reducedMotion, scroller, setStage, store } from './lib/store'
-import { sound } from './lib/sound'
+import { emit, reducedMotion, scroller, setStage, store } from './lib/store'
+import { WALK_TIME } from './components/three/Batsman'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const Experience = lazy(() => import('./components/three/Experience'))
 
-// The walk-in plays once per browser tab; after that a reload goes straight to the hero.
+// The intro plays once per browser tab; after that a reload goes straight to the hero.
 const seen = {
   get: () => {
     try {
@@ -48,7 +48,7 @@ export default function App() {
   const [sceneReady, setSceneReady] = useState(false)
   const [phase, setPhase] = useState('loading') // loading → intro → live
   const intro = useRef(null)
-  const quiet = useRef(false) // true while the intro is being skipped: no tap sounds / dust
+  const quiet = useRef(false) // true while the intro is being skipped: no dust / fireworks
 
   /* ---------- smooth scroll (Lenis) driven by GSAP's ticker ---------- */
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function App() {
     const raf = (time) => lenis.raf(time * 1000)
     gsap.ticker.add(raf)
     gsap.ticker.lagSmoothing(0)
-    lenis.stop() // locked until the walk-in has finished
+    lenis.stop() // locked until the intro has finished
     return () => {
       gsap.ticker.remove(raf)
       lenis.destroy()
@@ -78,7 +78,7 @@ export default function App() {
       store.mouse.x = (e.clientX / window.innerWidth) * 2 - 1
       store.mouse.y = -((e.clientY / window.innerHeight) * 2 - 1)
     }
-    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mousemove', onMove, { passive: true })
     return () => window.removeEventListener('mousemove', onMove)
   }, [])
 
@@ -102,51 +102,23 @@ export default function App() {
         },
       })
     )
+    // phones change height when the address bar hides: don't recalculate on every tiny resize
+    ScrollTrigger.config({ ignoreMobileResize: true })
     return () => triggers.forEach((t) => t.kill())
   }, [])
 
-  /* ---------- sound: the 3D scene reports events, the page decides what is heard ---------- */
-  useEffect(() => {
-    let wickets = 0
-    const offs = [
-      on('wicket', () => {
-        if (store.stage < 3.4 || store.stage > 6.6) return
-        sound.play('stumps')
-        if (wickets++ % 3 === 0) sound.play('cheer')
-      }),
-      on('six', () => Math.abs(store.stage - 7) < 0.6 && sound.play('crack')),
-      on('firework', () => sound.play('firework')),
-      onSectionChange((idx) => {
-        const id = sections[idx]?.id
-        sound.crowd(id === 'hero' ? 0.9 : id === 'matchball' || id === 'contact' ? 0.75 : 0.45)
-        if (store.started && store.intro >= 1) sound.play('whoosh')
-      }),
-    ]
-    const click = (e) => e.target instanceof Element && e.target.closest('a, button') && sound.play('click')
-    document.addEventListener('click', click)
-    return () => {
-      offs.forEach((off) => off())
-      document.removeEventListener('click', click)
-    }
-  }, [])
-
-  /* ---------- the visitor clicked "Enter": this click is what allows audio ---------- */
-  const handleEnter = useCallback((withSound) => {
-    if (withSound) {
-      sound.setEnabled(true)
-      sound.crowd(0.9)
-    }
-  }, [])
-
-  /* ---------- walk-in: batter comes out, takes guard, taps the pitch, profile appears ---------- */
+  /* ---------- the intro ----------
+     0.0s  drone shot over the stadium, floodlights switch on one tower at a time
+     2.6s  camera dives down behind the batter, he walks out to the crease
+     7.0s  he takes guard and taps the pitch twice
+     8.3s  a new ball drops from the sky, knocks the pitch and rolls to his bat
+     8.6s  name, player profile and navigation come in                                        */
   const startIntro = useCallback(() => {
     setPhase('intro')
     store.started = true
-    const bang = () => {
-      if (quiet.current) return
-      emit('tap')
-      sound.play('tap')
-    }
+    const fx = (fn) => () => !quiet.current && fn()
+    const W0 = 2.9
+    const W1 = W0 + WALK_TIME
     const tl = gsap.timeline({
       onComplete: () => {
         setPhase('live')
@@ -155,32 +127,31 @@ export default function App() {
         ScrollTrigger.refresh()
       },
     })
-    tl.to(store, { walk: 1, duration: 5, ease: 'none' }, 0)
-      .to(store, { intro: 1, duration: 6.6, ease: 'sine.inOut' }, 0)
-      .fromTo('.intro-l3', { opacity: 0, xPercent: -40 }, { opacity: 1, xPercent: 0, duration: 0.7, ease: 'power3.out' }, 0.6)
-      .to(store, { guard: 1, duration: 0.9, ease: 'power2.inOut' }, 4.85)
-      .to('.intro-l3', { opacity: 0, xPercent: -40, duration: 0.5, ease: 'power2.in' }, 5.2)
+    tl.to(store, { flood: 1, duration: 2.8, ease: 'power1.inOut' }, 0)
+      .fromTo('.intro-opener', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.2)
+      .fromTo('.intro-opener-title', { letterSpacing: '0.4em', opacity: 0 }, { letterSpacing: '0.04em', opacity: 1, duration: 1.4, ease: 'expo.out' }, 0.35)
+      .fromTo('.intro-opener-tag, .intro-opener-sub', { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.15 }, 0.5)
+      .to('.intro-opener', { opacity: 0, scale: 1.08, duration: 0.6, ease: 'power2.in' }, 2.3)
+      .to(store, { intro: 1, duration: 5.6, ease: 'none' }, 2.6)
+      .to(store, { walk: 1, duration: WALK_TIME, ease: 'none' }, W0)
+      .fromTo('.intro-l3', { opacity: 0, xPercent: -40 }, { opacity: 1, xPercent: 0, duration: 0.7, ease: 'power3.out' }, W0 + 0.6)
+      .to('.intro-l3', { opacity: 0, xPercent: -40, duration: 0.5, ease: 'power2.in' }, W1 - 0.3)
+      .to(store, { guard: 1, duration: 0.85, ease: 'power2.inOut' }, W1 - 0.15)
       // two taps on the pitch, then the bat stays grounded
-      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, 5.95)
-      .call(bang, null, 6.09)
-      .to(store, { tap: 0.15, duration: 0.2, ease: 'power2.out' }, 6.12)
-      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, 6.5)
-      .call(bang, null, 6.64)
-      .call(
-        () => {
-          if (quiet.current) return
-          emit('celebrate')
-          sound.play('cheer')
-        },
-        null,
-        6.7
-      )
-      // profile, name and navigation come in
-      .set('.hero-title', { opacity: 1 }, 6.3)
-      .fromTo('.hero-char', { y: 0, yPercent: 110 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: 0.03 }, 6.3)
-      .set('.hero-clip', { overflow: 'visible' }, 7.6) // let the neon glow spread once the letters have landed
-      .fromTo('.hero-fade', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.1 }, 6.6)
-      .fromTo('.nav-intro', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, 6.8)
+      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, W1 + 0.55)
+      .call(fx(() => emit('tap')), null, W1 + 0.69)
+      .to(store, { tap: 0.15, duration: 0.2, ease: 'power2.out' }, W1 + 0.72)
+      .to(store, { tap: 1, duration: 0.14, ease: 'power2.in' }, W1 + 1.05)
+      .call(fx(() => emit('tap')), null, W1 + 1.19)
+      // the new ball knocks into the pitch
+      .call(() => emit('knock', quiet.current), null, W1 + 1.1)
+      .call(fx(() => emit('celebrate')), null, W1 + 1.9)
+      // name, profile and navigation come in
+      .set('.hero-title', { opacity: 1 }, W1 + 1.3)
+      .fromTo('.hero-char', { y: 0, yPercent: 110 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: 0.03 }, W1 + 1.3)
+      .set('.hero-clip', { overflow: 'visible' }, W1 + 2.6) // let the neon glow spread once the letters have landed
+      .fromTo('.hero-fade', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.1 }, W1 + 1.6)
+      .fromTo('.nav-intro', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, W1 + 1.8)
     intro.current = tl
     window.__intro = tl
 
@@ -222,7 +193,7 @@ export default function App() {
       </Suspense>
       <Scrim />
 
-      {phase === 'loading' && <Preloader ready={sceneReady} onEnter={handleEnter} onDone={startIntro} />}
+      {phase === 'loading' && <Preloader ready={sceneReady} onDone={startIntro} />}
       <IntroOverlay active={phase === 'intro'} onSkip={skipIntro} />
       <Cursor />
       <Nav />

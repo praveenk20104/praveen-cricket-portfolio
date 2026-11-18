@@ -194,7 +194,7 @@ export default function Wicket() {
       sim.t0 = null
       if (sim.cycle !== -1) {
         sim.cycle = -1
-        ball.current.visible = false
+        ball.current.visible = store.prewarm
         trailUniforms.uOpacity.value = 0
         sim.bails.forEach((b, i) => {
           b.rest = true
