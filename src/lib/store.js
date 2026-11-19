@@ -4,6 +4,10 @@ export const store = {
   stage: 0, // continuous scroll stage: 0 = hero … 9 = contact
   flood: 0, // 0 → 1 floodlights switch on, one tower at a time (drone shot)
   intro: 0, // 0 → 1 camera dives down and follows the batter to the hero shot
+  ballcam: 0, // 0 → 1 how much the camera is riding the ball (game plan → skills)
+  ballSpeed: 0, // how fast the visitor is scrolling through the ball-cam
+  dim: false, // a text-heavy section is on screen: the 3D can render at half rate
+  lite: false, // a very slow device: render at half rate everywhere
   prewarm: true, // while the loader covers the screen, everything is drawn once so no shader compiles later
   walk: 0, // 0 → 1 batsman's progress from the boundary to the crease
   guard: 0, // 0 → 1 batsman settles into his stance

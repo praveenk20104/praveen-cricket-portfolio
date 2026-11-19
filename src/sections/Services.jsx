@@ -14,7 +14,7 @@ export default function Services() {
       <div className="mx-auto w-full max-w-7xl">
         <Eyebrow no="03">What I bring to the team</Eyebrow>
         <h2 data-reveal className="h-display mt-5 max-w-4xl text-[clamp(2.7rem,6vw,5.6rem)]">
-          Four ways I <span className="neon-red">score</span> for your business.
+          Four ways I <span className="accent-text">score</span> for your business.
         </h2>
         <div className="mt-10 grid gap-4 md:grid-cols-2 md:gap-5" style={{ perspective: '1400px' }}>
           {services.map((s, i) => (
@@ -25,10 +25,10 @@ export default function Services() {
               data-cursor="hover"
               className="glass-strong neon-edge group relative overflow-hidden rounded-3xl p-6 transition-transform duration-500 hover:-translate-y-2 md:p-8"
             >
-              <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#ff1f3d]/25 opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-india/25 opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
               <div className="flex items-start justify-between">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-[#ff1f3d]/50 bg-[#ff1f3d]/15 shadow-[0_0_20px_rgba(255,31,61,0.3)]">
-                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="#ff5a70" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-india/50 bg-india/15 shadow-[0_0_20px_rgba(47,107,255,0.35)]">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="#ffa23a" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                     {icons[s.icon]}
                   </svg>
                 </span>

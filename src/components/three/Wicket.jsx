@@ -3,6 +3,11 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { PITCH, createBallTextures } from './textures'
 import { store, emit, reducedMotion } from '../../lib/store'
+import { bindUniforms } from './bindUniforms'
+
+// Which sections bowl a live delivery (services, skills, career). The game plan section
+// has the ball-cam instead, and Hawk-Eye draws its own tracked balls.
+export const isBowling = (s) => (s > 2.6 && s < 3.55) || (s > 4.85 && s < 5.6) || (s > 6.5 && s < 7.55)
 
 // Real-world dimensions (metres)
 const STUMP_H = 0.711
@@ -23,10 +28,12 @@ const RELEASE = new THREE.Vector3(0.32, 2.15, 9.2)
 const BOUNCE = new THREE.Vector3(0.07, BALL_R, -4.3)
 const HIT = new THREE.Vector3(0.0, 0.42, WICKET_Z + 0.06)
 
+const LED_IDLE = new THREE.Color('#ffae42')
+const LED_HIT = new THREE.Color('#ff1733')
 function neonMaterial(intensity) {
   return new THREE.MeshStandardMaterial({
-    color: '#ffe4e8',
-    emissive: new THREE.Color('#ff1733'),
+    color: '#fff1dc',
+    emissive: LED_IDLE.clone(),
     emissiveIntensity: intensity,
     roughness: 0.35,
     metalness: 0.1,
@@ -56,7 +63,7 @@ const sparkFrag = /* glsl */ `
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float a = smoothstep(0.5, 0.0, d) * vLife;
-    vec3 col = mix(vec3(4.0, 0.25, 0.35), vec3(4.0, 3.2, 2.6), step(0.7, vSeed));
+    vec3 col = mix(vec3(4.0, 1.8, 0.4), vec3(4.0, 3.4, 3.0), step(0.7, vSeed));
     gl_FragColor = vec4(col, a);
   }
 `
@@ -77,7 +84,7 @@ const trailFrag = /* glsl */ `
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float a = smoothstep(0.5, 0.0, d) * vFade * uOpacity;
-    gl_FragColor = vec4(vec3(3.5, 0.2, 0.32), a);
+    gl_FragColor = vec4(vec3(3.4, 1.6, 0.35), a);
   }
 `
 
@@ -124,7 +131,8 @@ export default function Wicket() {
     ballV: new THREE.Vector3(),
     ballP: new THREE.Vector3(),
     hitDone: false,
-    t0: null,
+    time: null,
+    replay: false,
   }).current
 
   // Spark burst geometry
@@ -186,12 +194,15 @@ export default function Wicket() {
   const tmp = new THREE.Vector3()
 
   useFrame((state, delta) => {
-    const dt = Math.min(delta, 0.05)
-    sparkUniforms.uAge.value += dt
-    // deliveries only run while the batter is off the field (sections 3 → 8)
-    const bowling = store.started && !reducedMotion && store.stage > 2.6 && store.stage < 8.4
+    const realDt = Math.min(delta, 0.05)
+    const bowling = store.started && !reducedMotion && isBowling(store.stage)
     if (!bowling) {
-      sim.t0 = null
+      sparkUniforms.uAge.value += realDt
+      sim.time = null
+      if (sim.replay) {
+        sim.replay = false
+        emit('replay', false)
+      }
       if (sim.cycle !== -1) {
         sim.cycle = -1
         ball.current.visible = store.prewarm
@@ -207,10 +218,23 @@ export default function Wicket() {
       }
       return
     }
-    if (sim.t0 == null) sim.t0 = state.clock.elapsedTime - 0.6 // first ball shortly after the camera arrives
-    const time = state.clock.elapsedTime - sim.t0
+    // Delivery time runs on its own clock so a replay can play it in slow motion.
+    // Every third ball is the slow-motion replay of the one before.
+    if (sim.time == null) sim.time = 0.6 // first ball shortly after the camera arrives
+    const cycle0 = Math.floor(sim.time / PERIOD)
+    const t0 = sim.time - cycle0 * PERIOD
+    const replay = cycle0 % 3 === 2
+    const slow = replay && t0 > T_BOUNCE + 0.15 && t0 < T_HIT + 1.5
+    const dt = realDt * (slow ? 0.22 : 1)
+    sim.time += dt
+    sparkUniforms.uAge.value += dt
+    const time = sim.time
     const cycle = Math.floor(time / PERIOD)
     const t = time - cycle * PERIOD
+    if (replay !== sim.replay) {
+      sim.replay = replay
+      emit('replay', replay)
+    }
 
     // New delivery: reset everything
     if (cycle !== sim.cycle) {
@@ -224,7 +248,7 @@ export default function Wicket() {
         b.rest = true
       })
       resetTrail(RELEASE)
-      emit('delivery', 132 + Math.random() * 16) // speed-gun reading, km/h
+      if (cycle % 3 !== 2) emit('delivery', 132 + Math.random() * 16) // speed-gun reading, km/h
     }
 
     // --- Ball flight ---
@@ -308,6 +332,10 @@ export default function Wicket() {
 
     // Flash on impact
     const flash = since < 1.2 ? Math.exp(-4 * since) : 0
+    // LED stumps: warm white while live, flashing red the moment they are broken
+    const red = since < 2.4 ? Math.min(1, flash * 3 + (Math.sin(since * 22) > 0 ? 0.6 : 0) * (since < 1.6 ? 1 : 0)) : 0
+    mats.stump.emissive.copy(LED_IDLE).lerp(LED_HIT, red)
+    mats.bail.emissive.copy(LED_IDLE).lerp(LED_HIT, red)
     mats.stump.emissiveIntensity = 2.4 + flash * 9
     mats.bail.emissiveIntensity = 3.4 + flash * 8
     if (glow.current) glow.current.intensity = 6 + flash * 60
@@ -322,16 +350,16 @@ export default function Wicket() {
       {/* Bowler's end — dimmer neon */}
       <Stumps z={-WICKET_Z} mats={{ stump: mats.dim, bail: mats.dimBail }} />
 
-      <pointLight ref={glow} position={[0, 0.9, WICKET_Z + 0.9]} color="#ff1f3d" intensity={6} distance={6} decay={2} />
+      <pointLight ref={glow} position={[0, 0.9, WICKET_Z + 0.9]} color="#ffb04a" intensity={6} distance={6} decay={2} />
 
       {/* Delivery ball */}
       <mesh ref={ball} castShadow visible={false}>
         <sphereGeometry args={[BALL_R, 32, 24]} />
-        <meshPhysicalMaterial map={ballTex.map} roughness={0.4} clearcoat={0.6} emissive="#ff1f3d" emissiveIntensity={0.25} />
+        <meshPhysicalMaterial map={ballTex.map} roughness={0.4} clearcoat={0.6} emissive="#ff5a2a" emissiveIntensity={0.25} />
       </mesh>
 
       <points geometry={trail} frustumCulled={false}>
-        <shaderMaterial
+        <shaderMaterial ref={bindUniforms(trailUniforms)}
           uniforms={trailUniforms}
           vertexShader={trailVert}
           fragmentShader={trailFrag}
@@ -342,7 +370,7 @@ export default function Wicket() {
       </points>
 
       <points ref={sparks} geometry={sparkGeo} frustumCulled={false}>
-        <shaderMaterial
+        <shaderMaterial ref={bindUniforms(sparkUniforms)}
           uniforms={sparkUniforms}
           vertexShader={sparkVert}
           fragmentShader={sparkFrag}

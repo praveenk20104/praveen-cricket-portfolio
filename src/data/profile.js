@@ -136,7 +136,7 @@ export const career = [
 ]
 
 export const education = [
-  { title: 'Master of Computer Applications (MCA)', org: 'Pursuing', period: '2025 – Present' },
+  { title: 'Master of Computer Applications (MCA)', org: 'Indira Gandhi National Open University (IGNOU)', period: '2025 – Present' },
   { title: 'Bachelor of Computer Applications (BCA)', org: 'Indira Gandhi National Open University (IGNOU)', period: '2021 – 2025' },
   { title: 'Class XII (CBSE)', org: 'Govt. Co-Ed Sr. Sec. School, Rohini', period: '2021' },
 ]
@@ -147,6 +147,21 @@ export const certifications = [
   { title: 'Python (Basic)', org: 'HackerRank', period: 'Jul 2025' },
   { title: 'SQL (Basic)', org: 'HackerRank', period: 'Jul 2025' },
 ]
+
+// Hawk-Eye section: each tracked ball is one of the core tools, in the order I use them
+export const hawkEye = {
+  steps: [
+    { title: 'Track', text: 'Collect every number that matters.' },
+    { title: 'Analyse', text: 'Find where it pitched and why.' },
+    { title: 'Predict', text: 'Show where it is heading next.' },
+  ],
+  balls: [
+    { tool: 'Excel', job: 'Track & clean', color: '#4d86ff' },
+    { tool: 'SQL', job: 'Pull the data', color: '#ffa23a' },
+    { tool: 'Python', job: 'Analyse', color: '#f4f1ea' },
+    { tool: 'Power BI', job: 'Predict & show', color: '#2fd27a' },
+  ],
+}
 
 // Images are real screenshots of the dashboards (public/projects). Numbers are read from the dashboards.
 export const projects = [
@@ -222,6 +237,7 @@ export const sections = [
   { id: 'services', label: 'Services' },
   { id: 'gameplan', label: 'Game plan' },
   { id: 'skills', label: 'Skills' },
+  { id: 'hawkeye', label: 'Hawk-Eye' },
   { id: 'career', label: 'Scorecard' },
   { id: 'projects', label: 'Projects' },
   { id: 'training', label: 'Training' },

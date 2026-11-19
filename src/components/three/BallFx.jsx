@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { store, reducedMotion } from '../../lib/store'
+import { bindUniforms } from './bindUniforms'
 
 /* Swing trails: glowing comets that whip round the match ball on tilted orbits,
    like the path of a ball swinging through the air. */
@@ -15,12 +16,13 @@ const trailVert = /* glsl */ `
 const trailFrag = /* glsl */ `
   uniform float uHead;
   uniform float uOpacity;
+  uniform vec3 uTint;
   varying vec2 vUv;
   void main() {
     float d = fract(uHead - vUv.x);              // 0 at the comet head, growing along the tail
     float tail = smoothstep(0.42, 0.0, d);
     float head = smoothstep(0.025, 0.0, d);
-    vec3 col = mix(vec3(3.4, 0.18, 0.32), vec3(4.0, 3.2, 2.8), head);
+    vec3 col = mix(uTint, vec3(4.0, 3.4, 3.0), head);
     gl_FragColor = vec4(col, (tail * 0.85 + head) * uOpacity);
   }
 `
@@ -35,8 +37,8 @@ function orbit(rx, rz) {
 }
 
 const TRAILS = [
-  { rx: 1.55, rz: 1.3, tilt: [0.5, 0, 0.35], speed: 0.42, radius: 0.014 },
-  { rx: 1.85, rz: 1.5, tilt: [-0.35, 0.6, -0.5], speed: -0.31, radius: 0.01 },
+  { rx: 1.55, rz: 1.3, tilt: [0.5, 0, 0.35], speed: 0.42, radius: 0.014, tint: [3.4, 1.6, 0.35] },
+  { rx: 1.85, rz: 1.5, tilt: [-0.35, 0.6, -0.5], speed: -0.31, radius: 0.01, tint: [0.5, 1.1, 3.6] },
 ]
 
 export function SwingTrails({ visibility }) {
@@ -45,7 +47,7 @@ export function SwingTrails({ visibility }) {
       TRAILS.map((t) => ({
         ...t,
         geo: new THREE.TubeGeometry(orbit(t.rx, t.rz), 220, t.radius, 6, true),
-        uniforms: { uHead: { value: Math.random() }, uOpacity: { value: 0 } },
+        uniforms: { uHead: { value: Math.random() }, uOpacity: { value: 0 }, uTint: { value: new THREE.Vector3(...t.tint) } },
       })),
     []
   )
@@ -58,7 +60,7 @@ export function SwingTrails({ visibility }) {
   })
   return items.map((it, i) => (
     <mesh key={i} geometry={it.geo} rotation={it.tilt} frustumCulled={false}>
-      <shaderMaterial uniforms={it.uniforms} vertexShader={trailVert} fragmentShader={trailFrag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+      <shaderMaterial ref={bindUniforms(it.uniforms)} uniforms={it.uniforms} vertexShader={trailVert} fragmentShader={trailFrag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
     </mesh>
   ))
 }
@@ -82,9 +84,9 @@ export function TextRing() {
       x.font = "400 76px Anton, Impact, sans-serif"
       const parts = [
         ['READY FOR THE NEXT INNINGS', '#ffffff'],
-        ['  ●  ', '#ff1f3d'],
-        ["LET'S CONNECT", '#ff4a62'],
-        ['  ●  ', '#ff1f3d'],
+        ['  ●  ', '#ffa23a'],
+        ["LET'S CONNECT", '#ffa23a'],
+        ['  ●  ', '#ffa23a'],
       ]
       const width = parts.reduce((w, [s]) => w + x.measureText(s).width, 0)
       const scale = c.width / 2 / width // the phrase fits exactly twice round the ring
@@ -106,7 +108,7 @@ export function TextRing() {
     return t
   }, [])
   useFrame((state, dt) => {
-    const v = THREE.MathUtils.smoothstep(store.stage, 8.45, 8.95)
+    const v = THREE.MathUtils.smoothstep(store.stage, 9.45, 9.95)
     ring.current.visible = v > 0.01 || store.prewarm
     mat.current.opacity = v
     if (!reducedMotion) ring.current.rotation.y -= Math.min(dt, 0.05) * 0.35

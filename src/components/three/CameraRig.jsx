@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { store, isTouch } from '../../lib/store'
 import { WALK_FROM, GUARD_AT } from './Batsman'
+import { ballCamPose } from './BallCam'
 
 // Camera "shots", one per section. s = scroll stage (see `sections` in data/profile.js).
 // Extra in-between keys (0.5, 0.8, 1.5) steer the camera around the big match ball.
@@ -14,12 +15,13 @@ const KEYS_WIDE = [
   { s: 1.5, pos: [2.5, 3.3, 9.6], look: [-0.6, 1.2, 1] },
   { s: 2, pos: [1.2, 3.3, 4.2], look: [-1.1, 0.3, -4.5] }, // about: over the pitch
   { s: 3, pos: [-1.9, 0.6, 7.3], look: [0.7, 0.7, 10.06] }, // services: low by the bowler's stumps
-  { s: 4, pos: [0.8, 0.5, 2.6], look: [-0.1, 0.4, -10] }, // game plan: deliveries fly past
+  { s: 4, pos: [0.45, 2.45, 12.2], look: [0.05, 0.9, -6] }, // game plan: behind the bowler's arm (ball-cam starts here)
   { s: 5, pos: [1.15, 1.0, -6.9], look: [-0.85, 0.55, -10.06] }, // skills: close on the stumps
-  { s: 6, pos: [-7.8, 2.4, -2.5], look: [-0.5, 0.6, -2.5] }, // career: square-leg broadcast angle
-  { s: 7, pos: [0.01, 30, 4], look: [0, 0, -3] }, // projects: spider-cam, sixes flying out
-  { s: 8, pos: [6, 3.2, 17], look: [-21, 11, -92] }, // training: big screen + fireworks
-  { s: 9, pos: [-2.6, 2.3, 14.4], look: [-2.0, 2.15, 9] }, // next innings: ball + text ring on the right
+  { s: 6, pos: [0.6, 6.2, 11.5], look: [-1.9, -0.2, -2.6] }, // hawk-eye: high behind the bowler, pitch on the right
+  { s: 7, pos: [-7.8, 2.4, -2.5], look: [-0.5, 0.6, -2.5] }, // career: square-leg broadcast angle
+  { s: 8, pos: [0.01, 30, 4], look: [0, 0, -3] }, // projects: spider-cam, sixes flying out
+  { s: 9, pos: [6, 3.2, 17], look: [-21, 11, -92] }, // training: big screen + fireworks
+  { s: 10, pos: [-2.6, 2.3, 14.4], look: [-2.0, 2.15, 9] }, // next innings: ball + text ring on the right
 ]
 const KEYS_TALL = [
   { s: 0, pos: [1.0, 1.5, -3.5], look: [-0.3, 0.7, -8.75] },
@@ -29,12 +31,13 @@ const KEYS_TALL = [
   { s: 1.5, pos: [2.4, 3.6, 10], look: [0, 1, 1] },
   { s: 2, pos: [0.6, 4.2, 6.5], look: [0, 0.2, -3] },
   { s: 3, pos: [-1.6, 0.8, 6.4], look: [0.4, 0.8, 10.06] },
-  { s: 4, pos: [0.6, 0.7, 3.6], look: [0, 0.4, -10] },
+  { s: 4, pos: [0.4, 2.6, 13.5], look: [0, 0.8, -6] },
   { s: 5, pos: [0.7, 1.3, -6.2], look: [0, 0.75, -10.06] },
-  { s: 6, pos: [-9, 3, -2.5], look: [0, 0.4, -2.5] },
-  { s: 7, pos: [0.01, 34, 4], look: [0, 0, -2] },
-  { s: 8, pos: [4, 3.5, 20], look: [-22, 16, -92] },
-  { s: 9, pos: [0, 2.7, 18.5], look: [0, 0.8, 9] },
+  { s: 6, pos: [0, 8.5, 13], look: [0, -0.6, -1.5] },
+  { s: 7, pos: [-9, 3, -2.5], look: [0, 0.4, -2.5] },
+  { s: 8, pos: [0.01, 34, 4], look: [0, 0, -2] },
+  { s: 9, pos: [4, 3.5, 20], look: [-22, 16, -92] },
+  { s: 10, pos: [0, 2.7, 18.5], look: [0, 0.8, 9] },
 ]
 
 // Intro, part 1: a drone shot sweeping over the stands while the floodlights switch on
@@ -83,6 +86,7 @@ export default function CameraRig() {
   const cur = useRef({ pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false })
   const par = useRef({ x: 0, y: 0 })
   const lastIntro = useRef(0)
+  const lastStage = useRef(0)
   const P = useMemo(() => new THREE.Vector3(), [])
   const L = useMemo(() => new THREE.Vector3(), [])
   const F = useMemo(() => new THREE.Vector3(), [])
@@ -139,13 +143,24 @@ export default function CameraRig() {
       c.pos.getPoint(t, P)
       c.look.getPoint(t, L)
       L.x -= heroShift * (1 - ss(store.stage, 0, 0.6))
+      // ball-cam: scrolling from the game plan to the skills rides the ball down the pitch
+      const u = store.stage - 4
+      const ride = u > 0 && u < 1 ? ss(u, 0, 0.14) * (1 - ss(u, 0.8, 1)) : 0
+      if (ride > 0) {
+        ballCamPose(u, B, H)
+        P.lerp(B, ride)
+        L.lerp(H, ride)
+      }
+      store.ballSpeed = THREE.MathUtils.damp(store.ballSpeed, Math.abs(store.stage - lastStage.current) / Math.max(dt, 0.001), 6, dt)
+      store.ballcam = ride
     }
+    lastStage.current = store.stage
 
     // subtle mouse parallax on desktop
     if (!isTouch && store.intro >= 1) {
       par.current.x = damp(par.current.x, store.mouse.x, 2.5, dt)
       par.current.y = damp(par.current.y, store.mouse.y, 2.5, dt)
-      const amt = store.stage > 6.5 && store.stage < 7.5 ? 1.2 : 0.22
+      const amt = store.stage > 7.5 && store.stage < 8.5 ? 1.2 : store.ballcam > 0.05 ? 0 : 0.22
       P.x += par.current.x * amt
       P.y += par.current.y * amt * 0.5
     }
@@ -157,7 +172,7 @@ export default function CameraRig() {
       s.look.copy(L)
       s.init = true
     }
-    const l = store.intro < 1 ? 14 : 5.5
+    const l = store.intro < 1 ? 14 : store.ballcam > 0.05 ? 12 : 5.5
     s.pos.set(damp(s.pos.x, P.x, l, dt), damp(s.pos.y, P.y, l, dt), damp(s.pos.z, P.z, l, dt))
     s.look.set(damp(s.look.x, L.x, l, dt), damp(s.look.y, L.y, l, dt), damp(s.look.z, L.z, l, dt))
 

@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Lightformer, PerformanceMonitor } from '@react-three/drei'
+import { Environment, Lightformer } from '@react-three/drei'
 import * as THREE from 'three'
 import CameraRig from './CameraRig'
 import Stadium from './Stadium'
@@ -12,8 +12,71 @@ import Batsman from './Batsman'
 import SixShots from './SixShots'
 import Fireworks from './Fireworks'
 import IntroBall from './IntroBall'
+import HawkEye from './HawkEye'
+import BallCam from './BallCam'
+import Confetti from './Confetti'
 import Effects from './Effects'
 import { store, isTouch } from '../../lib/store'
+
+// Render driver. The canvas only draws when this asks it to, so it can
+//  - draw at full rate normally,
+//  - draw every 2nd screen refresh behind text-heavy sections (the 3D is mostly hidden by the scrim),
+//  - draw every 2nd (or 3rd) refresh everywhere on a device that is still too slow at the lowest level.
+// It also measures whether the device keeps up with the screen and steps quality up or down.
+function Driver({ adaptive, onDecline, onIncline }) {
+  const invalidate = useThree((s) => s.invalidate)
+  const cb = useRef({ onDecline, onIncline })
+  cb.current = { onDecline, onIncline }
+  useEffect(() => {
+    let raf
+    let n = 0
+    let frames = 0
+    let last = performance.now()
+    let refresh = 0
+    let low = 0
+    let high = 0
+    let cooldown = 2
+    const loop = (now) => {
+      raf = requestAnimationFrame(loop)
+      n++
+      frames++
+      const every = store.lite ? (store.dim ? 3 : 2) : store.dim && store.intro >= 1 ? 2 : 1
+      if (n % every === 0) invalidate()
+      if (now - last < 1000) return
+      const fps = (frames * 1000) / (now - last)
+      frames = 0
+      last = now
+      refresh = Math.max(refresh, Math.min(fps, 125))
+      if (!adaptive || document.hidden || refresh < 20) return
+      if (cooldown > 0) {
+        cooldown--
+        return
+      }
+      if (fps < refresh * 0.82) {
+        low++
+        high = 0
+      } else if (fps > refresh * 0.96) {
+        high++
+        low = 0
+      } else {
+        low = 0
+        high = 0
+      }
+      if (low >= 2) {
+        low = 0
+        cooldown = 2
+        cb.current.onDecline()
+      } else if (high >= 8) {
+        high = 0
+        cooldown = 2
+        cb.current.onIncline()
+      }
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [invalidate, adaptive])
+  return null
+}
 
 // Runs while the loader still covers the screen: every object is made visible and every shader
 // is compiled now, so nothing stutters later when a new effect appears for the first time.
@@ -40,10 +103,10 @@ function Reflections() {
   return (
     <Environment resolution={256} frames={1} environmentIntensity={0.55}>
       <Lightformer form="rect" intensity={5} color="#fff3e8" position={[0, 7, 9]} scale={[10, 2, 1]} target={[0, 2, 9]} />
-      <Lightformer form="ring" intensity={7} color="#ff1f3d" position={[-6, 3, 11]} scale={3} target={[0, 2, 9]} />
-      <Lightformer form="rect" intensity={4} color="#ff2a48" position={[6, 1, 10]} scale={[3, 7, 1]} target={[0, 2, 9]} />
+      <Lightformer form="ring" intensity={7} color="#ffa23a" position={[-6, 3, 11]} scale={3} target={[0, 2, 9]} />
+      <Lightformer form="rect" intensity={4} color="#4d86ff" position={[6, 1, 10]} scale={[3, 7, 1]} target={[0, 2, 9]} />
       <Lightformer form="circle" intensity={2.5} color="#ffffff" position={[0, 10, -4]} scale={6} target={[0, 0, 0]} />
-      <Lightformer form="rect" intensity={1.2} color="#ff4060" position={[0, -4, 6]} scale={[12, 1, 1]} target={[0, 2, 9]} />
+      <Lightformer form="rect" intensity={1.2} color="#4d86ff" position={[0, -4, 6]} scale={[12, 1, 1]} target={[0, 2, 9]} />
     </Environment>
   )
 }
@@ -144,6 +207,7 @@ export default function Experience({ onReady, started }) {
   return (
     <div ref={wrap} className="webgl" aria-hidden="true">
       <Canvas
+        frameloop="demand"
         dpr={dpr}
         shadows={isTouch ? false : 'percentage'}
         camera={{ fov: 42, near: 0.1, far: 450, position: [6.27, 1.45, -16.6] }}
@@ -153,30 +217,32 @@ export default function Experience({ onReady, started }) {
           if (FORCED === null) setLevel(Math.max(0, START - (isWeakGpu(gl.getContext()) ? 1 : 0) - (lowSpec ? 1 : 0)))
         }}
       >
-        <color attach="background" args={['#050206']} />
-        <fog attach="fog" args={['#050206', 32, 175]} />
-        {started && FORCED === null && (
-          <PerformanceMonitor
-            bounds={(refresh) => (refresh > 90 ? [50, 85] : [50, 58])}
-            onDecline={() =>
-              setLevel((l) => {
-                const next = Math.max(0, l - 1)
-                ceiling.current = next // never climb back above a level that was too slow
-                return next
-              })
-            }
-            onIncline={() => setLevel((l) => Math.min(ceiling.current, l + 1))}
-          />
-        )}
+        <color attach="background" args={['#04060e']} />
+        <fog attach="fog" args={['#04060e', 32, 175]} />
+        <Driver
+          adaptive={started && FORCED === null}
+          onDecline={() =>
+            setLevel((l) => {
+              if (l === 0) store.lite = true // already at the lowest level: draw fewer frames instead
+              const next = Math.max(0, l - 1)
+              ceiling.current = next // never climb back above a level that was too slow
+              return next
+            })
+          }
+          onIncline={() => setLevel((l) => Math.min(ceiling.current, l + 1))}
+        />
         <Suspense fallback={null}>
           <Reflections />
           <CameraRig />
-          <Stadium shadows={quality === 'high'} beams={!lite} />
+          <Stadium shadows={quality === 'high'} beams={!lite} detail={lite ? 'low' : quality} />
           <Batsman />
           <IntroBall />
           <CricketBall />
           <Wicket />
           <SixShots />
+          <HawkEye />
+          <BallCam />
+          <Confetti />
           <Fireworks />
           <SkillOrbit />
           <Particles />

@@ -1,6 +1,16 @@
-# Praveen Kumar: 3D Cricket Portfolio (v5)
+# Praveen Kumar: 3D Cricket Portfolio (v6)
 
-A night match in a WebGL stadium. The intro opens on a drone shot as the floodlights switch on one tower at a time, dives down behind a batter in India blue (PRAVEEN, No. 19) and walks out with him. He takes guard and taps the pitch, a new ball drops from the sky and knocks into the pitch with a neon shockwave, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the new ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (sixes flying over the boundary), the training camp (big screen and fireworks) and the "Next innings" chase graphic with a ring of LED text circling the ball.
+A night match in a WebGL stadium. The intro opens on a drone shot as the floodlights switch on one tower at a time, dives down behind a batter in India blue (PRAVEEN, No. 19) and walks out with him. He takes guard and taps the pitch, a new ball drops from the sky and knocks into the pitch with a neon shockwave, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the new ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (sixes flying over the boundary), the training camp (big screen and fireworks) and the "Next innings" DRS review that ends in **DECISION: HIRED ✓**.
+
+**New in v6**
+- **Hawk-Eye section**: four tracked deliveries (Excel, SQL, Python, Power BI) drawn as 3D ball paths with a pitch map, impact point and dashed predicted path.
+- **Ball-cam**: between the game plan and skills the camera rides the ball down the pitch with speed lines.
+- **Slow-motion replay**: every third delivery at the stumps replays in slow motion with a REPLAY badge on the TV strip.
+- **Broadcast wipes**: blue and saffron bands with the PK ball sweep across when you jump between sections.
+- **Real stadium**: stepped three-tier stands with seats, a roof with a light strip, black day-night sightscreens, swaying grass blades around the square, a cracked pitch, lens flare on the floodlights, four floodlight shadows under the batter, a seated 3D crowd doing the Mexican wave and waving tricolour flags.
+- **Palette**: India blue + saffron. Red is kept only for LIVE tags and the main buttons; glow is used in very few places.
+- **New cursor**: a small 3D cricket ball whose seam turns in the direction you move, with a blue-saffron comet trail (desktop only).
+- **Smooth on every device**: see section 6.
 
 **Stack:** Vite · React 19 · Tailwind CSS v4 · Three.js + React Three Fiber + Drei · @react-three/postprocessing · GSAP ScrollTrigger · Lenis
 
@@ -56,7 +66,14 @@ src/
     Wicket.jsx               neon stumps, looping delivery, flying bails, sparks, speed-gun event
     SixShots.jsx             "wagon wheel": glowing sixes launched from the crease
     Fireworks.jsx            fireworks above the stands
-    Stadium.jsx              pitch, outfield, rope, LED boundary boards, stands, Mexican wave, floodlights that switch on, big LED screen
+    Stadium.jsx              pitch, outfield, rope, LED boundary boards, floodlights (lens flare) that switch on, big LED screen
+    StadiumBowl.jsx          three-tier stands, roof, sightscreens, 3D crowd with Mexican wave, tricolour flags
+    Grass.jsx                swaying grass blades around the square
+    HawkEye.jsx              Hawk-Eye ball tracking (paths, pitch map, labels)
+    BallCam.jsx              ball-cam ride with speed lines
+    Confetti.jsx             tricolour confetti when the DRS says HIRED
+    lights.js                floodlight switch-on timing shared by all lighting
+    bindUniforms.js          keeps every shader animation connected to the GPU
     SkillOrbit.jsx           skills floating around the stumps
     Particles.jsx, Effects.jsx, textures.js
   components/ui/
@@ -64,8 +81,10 @@ src/
     IntroOverlay.jsx         "Under the lights" opener, lower-third, skip button
     Nav.jsx, ScoreBug.jsx    navigation, TV strip with over count and ball speed
     Scrim.jsx                keeps text readable over the 3D scene
-    Cursor.jsx, Magnetic.jsx custom cursor (bat over projects), magnetic buttons
-  sections/                  Hero, MatchBall, About, Services, GamePlan, Skills, Career, Projects, Training, Contact
+    Cursor.jsx, Magnetic.jsx 3D ball cursor with comet trail (bat over projects), magnetic buttons
+    Wipe.jsx                 broadcast wipe between sections
+  lib/motion.js              one easing style for every animation on the site
+  sections/                  Hero, MatchBall, About, Services, GamePlan, Skills, HawkEye, Career, Projects, Training, Contact
 ```
 
 ## 5. Works on every screen
@@ -84,5 +103,6 @@ Layouts follow the screen's **shape** (portrait or landscape), not just its widt
 
 - **The batter** uses the "X Bot" motion-capture figure from Adobe Mixamo (free for commercial use inside a project). His kit is generated in code: an original design in India colours (blue with saffron trim) with PRAVEEN and 19 printed on the back. It deliberately carries no board crest or sponsor logos. The walk-in camera follows him from behind first, so the name and number are seen. To use a custom character later, replace `public/models/batsman.glb` with any Mixamo-rigged GLB that has clips named `walk` and `idle`.
 - **The intro** plays once per browser tab (about 10 seconds). Reloading goes straight to the hero. "Skip intro" is always available.
+- **Performance (v6):** the 3D scene draws only when needed. Text-heavy sections (career, projects) draw the 3D behind them at half rate, which nobody can see behind the panels but halves the work. If a device still can't keep up on the lowest level, the site switches to **lite mode** (no grass, a smaller crowd, half-rate 3D). If a browser has no WebGL at all, a still picture of the stadium (`public/poster.jpg`) is shown behind the same content, so the site always works.
 - **Performance:** panels are solid instead of blurred (a blur over a live 3D scene is re-computed every frame, the biggest cause of lag). While the loader is on screen every shader is compiled once, so nothing stutters later when a new effect appears. Devices with few CPU cores, little memory or built-in graphics start on a lighter level. The site also measures the real frame rate and moves between quality levels (low / medium / high). Laptops with built-in graphics and older phones start on the light level and only climb if they stay smooth. On the light level glass blur, shadows and light beams are off. Add `?q=low`, `?q=medium` or `?q=high` to the URL to test a level by hand.
 - Respects `prefers-reduced-motion` (no walk-in, no deliveries, no fireworks).

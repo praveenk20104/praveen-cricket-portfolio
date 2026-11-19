@@ -59,11 +59,11 @@ export default function CricketBall() {
   const ringB = useRef()
   const tex = useMemo(() => createBallTextures(isTouch ? 1024 : 2048), [])
   const ringMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 0.18, 0.35), toneMapped: false, transparent: true }),
+    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(3.4, 1.6, 0.35), toneMapped: false, transparent: true }),
     []
   )
   const ringMatSoft = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 0.1, 0.2), toneMapped: false, transparent: true, opacity: 0.5 }),
+    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(0.4, 0.8, 2.6), toneMapped: false, transparent: true, opacity: 0.5 }),
     []
   )
   const tilt = useRef({ x: 0, y: 0 })
@@ -78,7 +78,7 @@ export default function CricketBall() {
     const s = store.stage
 
     // Visible in hero, hides as the camera flies past, returns for the contact CTA
-    const vis = Math.max(smooth(s, 0.3, 0.7) * (1 - smooth(s, 1.42, 1.75)), smooth(s, 8.3, 8.9))
+    const vis = Math.max(smooth(s, 0.3, 0.7) * (1 - smooth(s, 1.42, 1.75)), smooth(s, 9.3, 9.9))
     const scale = vis
     outer.current.scale.setScalar(Math.max(scale, 0.0001))
     outer.current.visible = scale > 0.002 || store.prewarm
@@ -149,9 +149,9 @@ export default function CricketBall() {
 
       {/* Lighting rig for the hero shot */}
       {/* red neon fills */}
-      <pointLight position={[-2.6, -0.4, 1.0]} color="#ff1f3d" intensity={22} distance={9} decay={2} />
+      <pointLight position={[-2.6, -0.4, 1.0]} color="#ff9a3a" intensity={18} distance={9} decay={2} />
       {/* rim light from behind for a crisp silhouette */}
-      <pointLight position={[0.6, 1.9, -2.0]} color="#ff6070" intensity={34} distance={8} decay={2} />
+      <pointLight position={[0.6, 1.9, -2.0]} color="#5b8cff" intensity={40} distance={8} decay={2} />
       {/* white floodlight key, aimed only at the ball */}
       <spotLight
         ref={key}

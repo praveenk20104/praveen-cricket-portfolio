@@ -5,15 +5,15 @@ export default function Career() {
   return (
     <section id="career" className="relative flex min-h-screen items-center px-5 py-28 md:px-12 lg:px-16">
       <div className="mx-auto w-full max-w-6xl">
-        <Eyebrow no="06">Career scorecard</Eyebrow>
+        <Eyebrow no="07">Career scorecard</Eyebrow>
         <h2 data-reveal className="h-display mt-5 text-[clamp(2.7rem,6vw,5.6rem)]">
-          The innings <span className="neon-red">so far.</span>
+          The innings <span className="accent-text">so far.</span>
         </h2>
 
         <div data-reveal className="glass-strong mt-10 overflow-hidden rounded-3xl">
-          <div className="flex items-center justify-between border-b border-white/15 bg-[#ff1f3d]/15 px-5 py-3 md:px-8">
+          <div className="flex items-center justify-between border-b border-white/15 bg-india/15 px-5 py-3 md:px-8">
             <span className="label !text-white">Batting · Professional XI</span>
-            <span className="label flex items-center gap-2 !text-[#ff4a62]">
+            <span className="label flex items-center gap-2 !text-saffron">
               <span className="red-dot !h-1.5 !w-1.5" /> Live
             </span>
           </div>
@@ -36,7 +36,7 @@ export default function Career() {
               <ul className="space-y-3 md:col-span-8">
                 {c.points.map((p) => (
                   <li key={p} className="body flex gap-3">
-                    <span className="mt-[0.7em] h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff1f3d]" />
+                    <span className="mt-[0.7em] h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" />
                     {p}
                   </li>
                 ))}

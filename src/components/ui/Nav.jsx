@@ -34,7 +34,7 @@ export default function Nav() {
               <span className="absolute inset-y-1 left-1/2 w-px -translate-x-1/2 border-l border-dashed border-[#f4e9d6]/80" />
             </span>
             <span className="font-display text-lg tracking-wider">
-              PK<span className="text-[#ff1f3d]">.</span>
+              PK<span className="text-saffron">.</span>
             </span>
           </a>
 
@@ -48,7 +48,7 @@ export default function Nav() {
                     current === l.id ? 'text-white' : 'text-white/75 hover:text-white'
                   }`}
                 >
-                  {current === l.id && <span className="absolute inset-0 -z-10 rounded-full bg-[#ff1f3d]/20 ring-1 ring-[#ff1f3d]/60" />}
+                  {current === l.id && <span className="absolute inset-0 -z-10 rounded-full bg-india/20 ring-1 ring-india/60" />}
                   {l.label}
                 </a>
               </li>
@@ -87,11 +87,11 @@ export default function Nav() {
         <p className="eyebrow mb-4">Field placements</p>
         {LINKS.map((l, i) => (
           <a key={l.id} href={`#${l.id}`} onClick={go(l.id)} className="flex items-baseline gap-4 border-b border-white/15 py-3.5 font-display text-4xl tracking-wide text-white">
-            <span className="font-mono text-xs text-[#ff3350]">0{i + 1}</span>
+            <span className="font-mono text-xs text-saffron">0{i + 1}</span>
             {l.label}
           </a>
         ))}
-        <a href={profile.resume} download className="mt-8 font-mono text-sm uppercase tracking-[0.2em] text-[#ff3350]">
+        <a href={profile.resume} download className="mt-8 font-mono text-sm uppercase tracking-[0.2em] text-saffron">
           Download resume ↓
         </a>
       </div>

@@ -23,11 +23,11 @@ function Photo() {
       ) : (
         <div className="grid h-full w-full place-items-center">
           <span className="font-display text-4xl tracking-wider text-white lg:text-6xl">
-            PK<span className="text-[#ff1f3d]">.</span>
+            PK<span className="text-saffron">.</span>
           </span>
         </div>
       )}
-      <span className="absolute inset-x-0 bottom-0 bg-[#ff1f3d] py-0.5 text-center font-mono text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-white md:text-[0.65rem]">
+      <span className="absolute inset-x-0 bottom-0 bg-india py-0.5 text-center font-mono text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-white md:text-[0.65rem]">
         Not out
       </span>
     </div>
@@ -52,12 +52,12 @@ export default function Hero() {
             <Chars text={profile.first} />
           </span>
           <span className="hidden landscape:inline"> </span>
-          <span className="neon-red block landscape:inline">
+          <span className="accent-text block landscape:inline">
             <Chars text={profile.last} />
           </span>
         </h1>
         <p className="hero-fade h-display mt-3 text-2xl md:text-3xl lg:text-[2.1rem] short:!mt-1" style={{ opacity: 0 }}>
-          Data Analyst <span className="text-[#ff3350]">&</span> MIS Executive
+          Data Analyst <span className="text-saffron">&</span> MIS Executive
         </p>
       </div>
 
@@ -66,7 +66,7 @@ export default function Hero() {
           <div className="flex gap-4 md:gap-5">
             <Photo />
             <div className="min-w-0 flex-1">
-              <p className="label !text-[#ff4a62]">Player profile</p>
+              <p className="label !text-saffron">Player profile</p>
               <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-2.5 lg:grid-cols-2 short:!grid-cols-3 short:gap-x-4">
                 {playerCard.map((row, i) => (
                   <div key={row.k} className={i === 0 || i === 3 || i === 4 ? 'hidden lg:block' : ''}>
@@ -107,7 +107,7 @@ export default function Hero() {
       <div className="hero-fade absolute bottom-8 right-8 hidden flex-col items-end gap-2 lg:landscape:flex" style={{ opacity: 0 }}>
         <p className="eyebrow">Scroll to start the innings</p>
         <span className="relative h-12 w-px overflow-hidden bg-white/25">
-          <span className="absolute inset-x-0 top-0 h-1/2 animate-[scrollcue_1.8s_ease-in-out_infinite] bg-[#ff1f3d]" />
+          <span className="absolute inset-x-0 top-0 h-1/2 animate-[scrollcue_1.8s_ease-in-out_infinite] bg-saffron" />
         </span>
       </div>
     </section>

@@ -11,7 +11,7 @@ export default function IntroOverlay({ onSkip, active }) {
             <span className="h-1.5 w-1.5 rounded-full bg-white" /> Live · Night match
           </p>
           <p className="intro-opener-title h-display mt-4 text-[clamp(2.6rem,9vw,7.5rem)] tracking-[0.04em]">
-            Under the <span className="neon-red">lights</span>
+            Under the <span className="accent-text">lights</span>
           </p>
           <p className="intro-opener-sub eyebrow mt-3">{profile.location} · The innings begins</p>
         </div>
@@ -30,7 +30,7 @@ export default function IntroOverlay({ onSkip, active }) {
       {active && (
         <button
           onClick={onSkip}
-          className="intro-skip glass-strong fixed bottom-5 right-5 z-50 rounded-full px-5 py-2.5 font-mono text-xs uppercase tracking-[0.18em] text-white hover:text-[#ff3350]"
+          className="intro-skip glass-strong fixed bottom-5 right-5 z-50 rounded-full px-5 py-2.5 font-mono text-xs uppercase tracking-[0.18em] text-white hover:text-saffron"
         >
           Skip intro ›
         </button>

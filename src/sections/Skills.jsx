@@ -12,12 +12,12 @@ export default function Skills() {
           <div data-reveal className="glass-strong w-full max-w-xl rounded-3xl p-6 md:p-9">
             <Eyebrow no="05">Defending the stumps</Eyebrow>
             <h2 className="h-display mt-4 text-[clamp(2.5rem,5vw,4.4rem)]">
-              Four skills <span className="neon-red">guard</span> my wicket.
+              Four skills <span className="accent-text">guard</span> my wicket.
             </h2>
             <ul className="mt-6 divide-y divide-white/15">
               {coreSkills.map((s, i) => (
                 <li key={s.name} className="flex items-baseline gap-4 py-3.5">
-                  <span className="font-mono text-sm font-semibold text-[#ff3350]">0{i + 1}</span>
+                  <span className="font-mono text-sm font-semibold text-saffron">0{i + 1}</span>
                   <div>
                     <p className="font-display text-2xl tracking-wide text-white md:text-3xl">{s.name}</p>
                     <p className="label mt-1 !text-white/85">{s.detail}</p>

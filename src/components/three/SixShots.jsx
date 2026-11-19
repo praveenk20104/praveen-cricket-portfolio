@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { store, emit, reducedMotion } from '../../lib/store'
+import { bindUniforms } from './bindUniforms'
 
 // Projects section: a 3D "wagon wheel". Glowing balls are launched from the crease
 // and sail over the boundary, each leaving a trail along its arc.
@@ -27,7 +28,7 @@ const frag = /* glsl */ `
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float a = smoothstep(0.5, 0.0, d) * vFade;
-    gl_FragColor = vec4(mix(vec3(3.2, 0.2, 0.35), vec3(3.5, 2.6, 2.0), vFade * vFade), a);
+    gl_FragColor = vec4(mix(vec3(3.4, 1.6, 0.35), vec3(3.8, 3.2, 2.8), vFade * vFade), a);
   }
 `
 
@@ -77,7 +78,7 @@ export default function SixShots() {
   const p = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((state) => {
-    const active = !reducedMotion && Math.abs(store.stage - 7) < 0.85
+    const active = !reducedMotion && Math.abs(store.stage - 8) < 0.85
     group.current.visible = active || store.prewarm
     if (!active) return
     const t = state.clock.elapsedTime
@@ -110,10 +111,10 @@ export default function SixShots() {
   return (
     <group ref={group} visible={false}>
       <lineSegments geometry={arcs} frustumCulled={false}>
-        <lineBasicMaterial color={new THREE.Color(1.6, 0.1, 0.2)} transparent opacity={0.35} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <lineBasicMaterial color={new THREE.Color(0.4, 0.8, 2.6)} transparent opacity={0.35} toneMapped={false} blending={THREE.AdditiveBlending} depthWrite={false} />
       </lineSegments>
       <points geometry={trail} frustumCulled={false}>
-        <shaderMaterial uniforms={uniforms} vertexShader={vert} fragmentShader={frag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+        <shaderMaterial ref={bindUniforms(uniforms)} uniforms={uniforms} vertexShader={vert} fragmentShader={frag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
       </points>
     </group>
   )

@@ -8,9 +8,15 @@
   --font-display: 'Anton', Impact, 'Arial Narrow', sans-serif;
   --font-sans: 'Inter Variable', Inter, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
-  --color-ink: #050206;
-  --color-neon: #ff1f3d;
+  --color-ink: #04060e;
+  /* one colour system: India blue + saffron. Red is only for LIVE and the main buttons. */
+  --color-india: #2f6bff;
+  --color-india-deep: #123fa8;
+  --color-saffron: #ffa23a;
+  --color-live: #ff2741;
+  --color-neon: #ff2741;
   --color-cherry: #b3121f;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --color-chalk: #f6f2ec;
 }
 
@@ -57,7 +63,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-neon);
+  background: var(--color-india);
   color: #fff;
 }
 
@@ -74,7 +80,7 @@ body {
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  background: radial-gradient(120% 90% at 50% 50%, rgba(5, 2, 6, 0.72), rgba(5, 2, 6, 0.9));
+  background: radial-gradient(120% 90% at 50% 50%, rgba(4, 6, 14, 0.72), rgba(4, 6, 14, 0.9));
   transition: opacity 0.9s ease;
 }
 .ui {
@@ -92,14 +98,14 @@ body {
 /* Panels are solid, not blurred. A backdrop blur over a live 3D scene has to be re-computed
    every frame and is the single biggest cause of lag on laptops and phones. */
 @utility glass {
-  background: linear-gradient(140deg, rgba(38, 16, 24, 0.9), rgba(16, 8, 12, 0.86) 55%, rgba(52, 11, 22, 0.84));
+  background: linear-gradient(140deg, rgba(18, 26, 52, 0.9), rgba(8, 11, 22, 0.88) 55%, rgba(14, 24, 56, 0.86));
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     0 30px 80px -30px rgba(0, 0, 0, 0.9);
 }
 @utility glass-strong {
-  background: linear-gradient(140deg, rgba(22, 10, 15, 0.94), rgba(10, 5, 8, 0.92));
+  background: linear-gradient(140deg, rgba(12, 17, 34, 0.95), rgba(6, 8, 16, 0.93));
   border: 1px solid rgba(255, 255, 255, 0.13);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
@@ -114,7 +120,7 @@ body {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(140deg, rgba(255, 31, 61, 0.95), rgba(255, 31, 61, 0) 35%, rgba(255, 31, 61, 0) 65%, rgba(255, 31, 61, 0.75));
+  background: linear-gradient(140deg, rgba(47, 107, 255, 0.95), rgba(47, 107, 255, 0) 35%, rgba(255, 162, 58, 0) 65%, rgba(255, 162, 58, 0.8));
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -162,18 +168,14 @@ body {
 .neon-text {
   color: #fff;
   text-shadow:
-    0 0 6px rgba(255, 31, 61, 0.7),
-    0 0 22px rgba(255, 31, 61, 0.6),
-    0 0 60px rgba(255, 31, 61, 0.4),
+    0 0 18px rgba(77, 134, 255, 0.55),
+    0 0 50px rgba(47, 107, 255, 0.3),
     0 4px 30px rgba(0, 0, 0, 0.8);
 }
-/* solid neon red word (replaces the old hollow outline, which was hard to read) */
-.neon-red {
-  color: #ff3350;
-  text-shadow:
-    0 0 14px rgba(255, 31, 61, 0.75),
-    0 0 44px rgba(255, 31, 61, 0.45),
-    0 4px 26px rgba(0, 0, 0, 0.85);
+/* the accent word in a headline: saffron, no glow */
+.accent-text {
+  color: var(--color-saffron);
+  text-shadow: 0 4px 26px rgba(0, 0, 0, 0.85);
 }
 .chip {
   display: inline-block;
@@ -192,8 +194,8 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--color-neon);
-  box-shadow: 0 0 10px var(--color-neon), 0 0 22px var(--color-neon);
+  background: var(--color-live);
+  box-shadow: 0 0 10px var(--color-live), 0 0 22px var(--color-live);
   animation: pulse 1.6s ease-in-out infinite;
 }
 @keyframes pulse {
@@ -272,26 +274,26 @@ body {
   font-size: 1.4rem;
   letter-spacing: 0.05em;
   padding: 0.6rem 1.25rem;
-  border-color: rgba(255, 31, 61, 0.8);
-  background: rgba(60, 4, 14, 0.85);
-  box-shadow: 0 0 24px rgba(255, 31, 61, 0.45), inset 0 0 18px rgba(255, 31, 61, 0.25);
-  text-shadow: 0 0 12px rgba(255, 31, 61, 0.8);
+  border-color: rgba(77, 134, 255, 0.85);
+  background: rgba(10, 22, 60, 0.88);
+  box-shadow: 0 0 22px rgba(47, 107, 255, 0.4);
 }
 .skill-chip__dot {
   width: 7px;
   height: 7px;
   border-radius: 99px;
-  background: #ff1f3d;
-  box-shadow: 0 0 10px #ff1f3d;
+  background: var(--color-saffron);
+  box-shadow: 0 0 10px var(--color-saffron);
 }
 
-/* ------------------------------------------------ custom cursor */
+/* ------------------------------------------------ custom cursor: a spinning 3D cricket ball */
 html.has-cursor,
 html.has-cursor * {
   cursor: none !important;
 }
-.cursor-dot,
-.cursor-ring,
+.cur-trail,
+.cur-ball,
+.cur-ring,
 .cursor-bat {
   position: fixed;
   top: 0;
@@ -300,39 +302,88 @@ html.has-cursor * {
   z-index: 9999;
   will-change: transform;
 }
-.cursor-dot {
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 99px;
-  background: #ff1f3d;
-  box-shadow: 0 0 10px #ff1f3d;
+.cur-trail {
+  width: 100vw;
+  height: 100vh;
+  z-index: 9998;
 }
-.cursor-ring {
-  width: 38px;
-  height: 38px;
-  margin: -19px 0 0 -19px;
+.cur-ball {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  transition:
+    width 0.35s var(--ease-out),
+    height 0.35s var(--ease-out),
+    margin 0.35s var(--ease-out),
+    opacity 0.25s;
 }
-.cursor-ring > span {
+/* the leather sphere; the seam rolls inside it */
+.cur-ball__sphere {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: radial-gradient(circle at 34% 28%, #ff8a8a 0%, #d6202f 32%, #8e0c16 68%, #3c0307 100%);
+  /* white + dark outline: readable on any background */
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.92),
+    0 0 0 3px rgba(4, 6, 14, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.6);
+}
+.cur-ball__seam {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 50%;
+  width: 7px;
+  margin-left: -3.5px;
+  border-left: 1.5px dashed rgba(255, 244, 228, 0.95);
+  border-right: 1.5px dashed rgba(255, 244, 228, 0.95);
+  border-radius: 50%;
+}
+.cur-ball__shine {
+  position: absolute;
+  left: 18%;
+  top: 14%;
+  width: 34%;
+  height: 22%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  filter: blur(1px);
+}
+.cur-ring {
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+}
+.cur-ring > span {
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1.5px solid var(--color-saffron);
+  box-shadow: 0 0 18px rgba(255, 162, 58, 0.45);
+  transform: scale(0.4);
+  opacity: 0;
   transition:
-    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-    background-color 0.35s,
-    border-color 0.35s,
+    transform 0.4s var(--ease-out),
     opacity 0.3s;
 }
-.cursor-ring.is-hover > span {
-  transform: scale(1.9);
-  background: rgba(255, 31, 61, 0.14);
-  border-color: rgba(255, 31, 61, 0.9);
+.cur-hover .cur-ring > span {
+  transform: scale(1);
+  opacity: 1;
 }
-.cursor-ring.is-bat > span {
+.cur-hover .cur-ball {
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+}
+.cur-bat .cur-ball,
+.cur-bat .cur-ring {
   opacity: 0;
-  transform: scale(0.4);
+}
+.cur-down .cur-ball {
+  transform-origin: center;
 }
 .cursor-bat {
   width: 96px;
@@ -345,7 +396,7 @@ html.has-cursor * {
   transform-origin: 18% 18%;
   transform: rotate(-30deg) scale(0);
   transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
-  filter: drop-shadow(0 0 10px rgba(255, 31, 61, 0.6));
+  filter: drop-shadow(0 0 10px rgba(255, 162, 58, 0.6));
 }
 .cursor-bat.is-on svg {
   transform: rotate(-30deg) scale(1);
@@ -354,9 +405,83 @@ html.has-cursor * {
   transform: rotate(40deg) scale(1);
   transition-duration: 0.12s;
 }
-.cursor-hidden .cursor-dot,
-.cursor-hidden .cursor-ring {
+.cur-hidden .cur-ball,
+.cur-hidden .cur-ring,
+.cur-hidden .cur-trail {
   opacity: 0;
+}
+
+/* ------------------------------------------------ Hawk-Eye labels (3D) */
+.hawk-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: rgba(6, 10, 22, 0.88);
+  border: 1px solid var(--c);
+  user-select: none;
+  transition: opacity 0.2s linear;
+}
+.hawk-label--float {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hawk-label__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 99px;
+  background: var(--c);
+}
+
+/* ------------------------------------------------ broadcast wipe between sections */
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  overflow: hidden;
+}
+.wipe__band {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: 42vw;
+  transform: translateX(-140%) skewX(-18deg);
+}
+.wipe__band--blue {
+  background: linear-gradient(90deg, rgba(18, 63, 168, 0), rgba(18, 63, 168, 0.9) 30%, rgba(47, 107, 255, 0.9) 70%, rgba(47, 107, 255, 0));
+}
+.wipe__band--saffron {
+  width: 9vw;
+  background: linear-gradient(90deg, rgba(255, 162, 58, 0), rgba(255, 162, 58, 0.95), rgba(255, 162, 58, 0));
+}
+.wipe__logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  opacity: 0;
+}
+
+/* ------------------------------------------------ DRS review card */
+.drs-row[data-state='done'] .drs-status {
+  color: #04060e;
+  background: var(--color-saffron);
+}
+.drs-scan {
+  background: linear-gradient(90deg, transparent, rgba(77, 134, 255, 0.55), transparent);
 }
 
 /* ------------------------------------------------ shatter effect */
@@ -364,7 +489,7 @@ html.has-cursor * {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05) 60%, rgba(255, 60, 90, 0.22));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05) 60%, rgba(77, 134, 255, 0.25));
   border-radius: inherit;
   will-change: transform, opacity;
 }
@@ -445,7 +570,7 @@ html.has-cursor * {
   left: 0;
   right: 0;
   height: 50.5%;
-  background: #050206;
+  background: #04060e;
 }
 .preloader__half--top {
   top: 0;
@@ -470,10 +595,10 @@ html.has-cursor * {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #050206;
+  background: #04060e;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(#ff1f3d, #6a0810);
+  background: linear-gradient(var(--color-india), var(--color-saffron));
   border-radius: 8px;
 }
 
@@ -484,4 +609,15 @@ html.has-cursor * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* no WebGL: a still frame of the stadium behind the page */
+.poster-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(rgba(4, 6, 14, 0.35), rgba(4, 6, 14, 0.75)),
+    url('/poster.jpg') center 30% / cover no-repeat,
+    #04060e;
 }

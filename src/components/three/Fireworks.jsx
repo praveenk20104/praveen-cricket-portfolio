@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { store, on, emit, reducedMotion } from '../../lib/store'
+import { bindUniforms } from './bindUniforms'
 
 // Fireworks above the stands. All motion is computed in the shader; the CPU only
 // writes a new origin / start time when a shell goes up.
@@ -96,7 +97,7 @@ export default function Fireworks() {
     const t = state.clock.elapsedTime
     uniforms.uTime.value = t
     if (reducedMotion) return
-    const show = store.stage > 7.55
+    const show = store.stage > 8.55
     if ((show || queue.current > 0) && t > next.current) {
       launch(t)
       if (queue.current > 0) queue.current--
@@ -106,7 +107,7 @@ export default function Fireworks() {
 
   return (
     <points geometry={geometry} frustumCulled={false}>
-      <shaderMaterial uniforms={uniforms} vertexShader={vert} fragmentShader={frag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+      <shaderMaterial ref={bindUniforms(uniforms)} uniforms={uniforms} vertexShader={vert} fragmentShader={frag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   )
 }

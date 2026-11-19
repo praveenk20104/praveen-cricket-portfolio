@@ -3,7 +3,11 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createFloodlightTexture, createGrassTexture, createPitchTexture, PITCH } from './textures'
 import { isTouch, store } from '../../lib/store'
+import { towerOn, towerFlash, lightLevel } from './lights'
+import StadiumBowl from './StadiumBowl'
+import Grass from './Grass'
 import { profile } from '../../data/profile'
+import { bindUniforms } from './bindUniforms'
 
 /* Fake volumetric light beam from each floodlight */
 const beamVert = /* glsl */ `
@@ -70,18 +74,11 @@ const crowdFrag = /* glsl */ `
   }
 `
 
-// Floodlights switch on one tower at a time during the intro (store.flood goes 0 → 1).
-export const towerOn = (i) => THREE.MathUtils.smoothstep(store.flood, 0.1 + i * 0.2, 0.14 + i * 0.2)
-const towerFlash = (i) => {
-  const t = store.flood - (0.1 + i * 0.2)
-  return t > 0 && t < 0.1 ? 1 - t / 0.1 : 0
-}
-export const lightLevel = () => (towerOn(0) + towerOn(1) + towerOn(2) + towerOn(3)) / 4
+export { towerOn, lightLevel } from './lights'
 
 function Crowd() {
-  const mat = useRef()
   const geometry = useMemo(() => {
-    const n = isTouch ? 2200 : 6000
+    const n = isTouch ? 700 : 1800
     const pos = new Float32Array(n * 3)
     const seed = new Float32Array(n)
     for (let i = 0; i < n; i++) {
@@ -109,7 +106,7 @@ function Crowd() {
   return (
     <points geometry={geometry}>
       <shaderMaterial
-        ref={mat}
+        ref={bindUniforms(uniforms)}
         uniforms={uniforms}
         vertexShader={crowdVert}
         fragmentShader={crowdFrag}
@@ -121,8 +118,33 @@ function Crowd() {
   )
 }
 
+function flareTexture() {
+  const c = document.createElement('canvas')
+  c.width = c.height = 256
+  const x = c.getContext('2d')
+  const g = x.createRadialGradient(128, 128, 0, 128, 128, 128)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.08, 'rgba(255,245,225,0.85)')
+  g.addColorStop(0.3, 'rgba(255,200,140,0.18)')
+  g.addColorStop(1, 'rgba(255,200,140,0)')
+  x.fillStyle = g
+  x.fillRect(0, 0, 256, 256)
+  // anamorphic streak
+  const s = x.createLinearGradient(0, 0, 256, 0)
+  s.addColorStop(0, 'rgba(120,170,255,0)')
+  s.addColorStop(0.5, 'rgba(200,220,255,0.75)')
+  s.addColorStop(1, 'rgba(120,170,255,0)')
+  x.fillStyle = s
+  x.fillRect(0, 124, 256, 8)
+  return new THREE.CanvasTexture(c)
+}
+const FLARE = typeof document !== 'undefined' ? flareTexture() : null
+const _dir = new THREE.Vector3()
+const _fwd = new THREE.Vector3()
+
 function FloodlightTower({ angle, beams, index }) {
   const tex = useMemo(() => createFloodlightTexture(), [])
+  const flare = useRef()
   const r = 104
   const head = new THREE.Vector3(Math.cos(angle) * r, 54, Math.sin(angle) * r)
   const target = new THREE.Vector3(Math.cos(angle) * 18, 0, Math.sin(angle) * 18)
@@ -145,6 +167,15 @@ function FloodlightTower({ angle, beams, index }) {
     panelRef.current.material.color.copy(panelColor)
     uniforms.uOpacity.value = beamMax * (on + flash * 1.5)
   })
+  // lens flare: brightest when the camera looks straight into the lamps
+  useFrame(({ camera }) => {
+    camera.getWorldDirection(_fwd)
+    _dir.copy(head).sub(camera.position).normalize()
+    const facing = Math.max(0, _fwd.dot(_dir))
+    const on = towerOn(index)
+    flare.current.material.opacity = on * Math.pow(facing, 6) * 0.9 + towerFlash(index) * 0.6
+    flare.current.scale.setScalar(26 + 30 * Math.pow(facing, 10))
+  })
   return (
     <group>
       <mesh position={[head.x * 1.02, 26, head.z * 1.02]}>
@@ -159,9 +190,12 @@ function FloodlightTower({ angle, beams, index }) {
         <planeGeometry args={[14, 7]} />
         <meshBasicMaterial map={tex} toneMapped={false} />
       </mesh>
+      <sprite ref={flare} position={head} scale={30}>
+        <spriteMaterial map={FLARE} color={new THREE.Color(2.2, 2.0, 1.8)} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+      </sprite>
       <mesh position={beam.mid} quaternion={beam.q} visible={beams}>
         <coneGeometry args={[26, beam.len, 40, 1, true]} />
-        <shaderMaterial
+        <shaderMaterial ref={bindUniforms(uniforms)}
           uniforms={uniforms}
           vertexShader={beamVert}
           fragmentShader={beamFrag}
@@ -264,7 +298,7 @@ function BigScreen() {
     const ss = THREE.MathUtils.smoothstep
     const portrait = size.width / size.height <= 1 // on phones the hero text sits where the screen is
     const hero = portrait ? 0 : 1 - ss(s, 0.45, 0.95)
-    const k = Math.max(hero, ss(s, 7.4, 7.9) * (1 - ss(s, 8.45, 8.9)))
+    const k = Math.max(hero, ss(s, 8.4, 8.9) * (1 - ss(s, 9.45, 9.9)))
     screenMat.current.color.setScalar((0.035 + 1.45 * k) * (0.05 + 0.95 * lightLevel()))
   })
   return (
@@ -281,7 +315,7 @@ function BigScreen() {
   )
 }
 
-export default function Stadium({ shadows, beams = true }) {
+export default function Stadium({ shadows, beams = true, detail = 'high' }) {
   const sun = useRef()
   const sky = useRef()
   const amb = useRef()
@@ -294,7 +328,8 @@ export default function Stadium({ shadows, beams = true }) {
   const pitchTex = useMemo(() => createPitchTexture(), [])
   const grassTex = useMemo(() => createGrassTexture(isTouch ? 1024 : 2048), [])
   const ropeMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.08, 0.2), toneMapped: false }),
+    // India-blue boundary rope
+    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(0.35, 0.75, 2.4), toneMapped: false }),
     []
   )
 
@@ -309,7 +344,7 @@ export default function Stadium({ shadows, beams = true }) {
       {/* Pitch strip */}
       <mesh rotation-x={-Math.PI / 2} position-y={0.006} receiveShadow={shadows}>
         <planeGeometry args={[PITCH.width, PITCH.length]} />
-        <meshStandardMaterial map={pitchTex} roughness={0.88} metalness={0} />
+        <meshStandardMaterial map={pitchTex} bumpMap={pitchTex} bumpScale={0.6} roughness={0.88} metalness={0} />
       </mesh>
 
       {/* Neon boundary rope */}
@@ -317,11 +352,10 @@ export default function Stadium({ shadows, beams = true }) {
         <torusGeometry args={[68, 0.045, 6, 256]} />
       </mesh>
 
-      {/* Raked stands */}
-      <mesh position-y={15}>
-        <cylinderGeometry args={[120, 95, 30, 96, 6, true]} />
-        <meshStandardMaterial color="#0b070d" roughness={1} side={THREE.BackSide} />
-      </mesh>
+      {/* tiered stands, roof, sightscreens, 3D crowd and flags */}
+      <StadiumBowl detail={detail} />
+      {detail !== 'low' && <Grass count={detail === 'high' ? 26000 : 12000} />}
+      {/* phone lights and camera flashes in the crowd */}
       <Crowd />
       <BigScreen />
       <LedBoards />

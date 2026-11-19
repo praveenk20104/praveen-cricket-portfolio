@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
@@ -14,6 +14,9 @@ import About from './sections/About'
 import Services from './sections/Services'
 import GamePlan from './sections/GamePlan'
 import Skills from './sections/Skills'
+import HawkEyeSection from './sections/HawkEye'
+import Wipe from './components/ui/Wipe'
+import { EASE } from './lib/motion'
 import Career from './sections/Career'
 import Projects from './sections/Projects'
 import Training from './sections/Training'
@@ -49,6 +52,17 @@ export default function App() {
   const [phase, setPhase] = useState('loading') // loading → intro → live
   const intro = useRef(null)
   const quiet = useRef(false) // true while the intro is being skipped: no dust / fireworks
+  const hasWebGL = useMemo(() => {
+    try {
+      const c = document.createElement('canvas')
+      return !!(c.getContext('webgl2') || c.getContext('webgl'))
+    } catch {
+      return false
+    }
+  }, [])
+  useEffect(() => {
+    if (!hasWebGL) setSceneReady(true)
+  }, [hasWebGL])
 
   /* ---------- smooth scroll (Lenis) driven by GSAP's ticker ---------- */
   useEffect(() => {
@@ -150,8 +164,8 @@ export default function App() {
       .set('.hero-title', { opacity: 1 }, W1 + 1.3)
       .fromTo('.hero-char', { y: 0, yPercent: 110 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: 0.03 }, W1 + 1.3)
       .set('.hero-clip', { overflow: 'visible' }, W1 + 2.6) // let the neon glow spread once the letters have landed
-      .fromTo('.hero-fade', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.1 }, W1 + 1.6)
-      .fromTo('.nav-intro', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, W1 + 1.8)
+      .fromTo('.hero-fade', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 1.0, ease: EASE.out, stagger: 0.1 }, W1 + 1.6)
+      .fromTo('.nav-intro', { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 1.0, ease: EASE.out }, W1 + 1.8)
     intro.current = tl
     window.__intro = tl
 
@@ -166,9 +180,9 @@ export default function App() {
           y: 0,
           rotationX: 0,
           scale: 1,
-          duration: pop ? 1.05 : 0.95,
+          duration: 1.0,
           delay: parseFloat(el.dataset.delay || 0),
-          ease: pop ? 'back.out(1.3)' : 'power3.out',
+          ease: EASE.out,
           scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' },
         }
       )
@@ -188,13 +202,19 @@ export default function App() {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <Experience onReady={() => setSceneReady(true)} started={phase !== 'loading'} />
-      </Suspense>
+      {hasWebGL ? (
+        <Suspense fallback={null}>
+          <Experience onReady={() => setSceneReady(true)} started={phase !== 'loading'} />
+        </Suspense>
+      ) : (
+        // no WebGL (very old phone or graphics switched off): a still frame of the stadium instead
+        <div className="poster-fallback" aria-hidden="true" />
+      )}
       <Scrim />
 
       {phase === 'loading' && <Preloader ready={sceneReady} onDone={startIntro} />}
       <IntroOverlay active={phase === 'intro'} onSkip={skipIntro} />
+      <Wipe />
       <Cursor />
       <Nav />
       <ScoreBug />
@@ -206,6 +226,7 @@ export default function App() {
         <Services />
         <GamePlan />
         <Skills />
+        <HawkEyeSection />
         <Career />
         <Projects />
         <Training />

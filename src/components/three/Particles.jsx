@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { isTouch, reducedMotion } from '../../lib/store'
+import { bindUniforms } from './bindUniforms'
 
 // Slow-floating red embers / fireflies — the cinematic "night match" atmosphere
 const vert = /* glsl */ `
@@ -32,7 +33,7 @@ const frag = /* glsl */ `
     float d = length(gl_PointCoord - 0.5);
     float a = smoothstep(0.5, 0.0, d);
     a *= a;
-    vec3 col = mix(vec3(2.6, 0.18, 0.3), vec3(2.6, 1.3, 0.5), vWarm);
+    vec3 col = mix(vec3(2.6, 1.25, 0.3), vec3(0.45, 0.9, 2.8), vWarm);
     gl_FragColor = vec4(col, a * vAlpha);
   }
 `
@@ -74,7 +75,7 @@ export default function Particles() {
 
   return (
     <points geometry={geometry} frustumCulled={false}>
-      <shaderMaterial
+      <shaderMaterial ref={bindUniforms(uniforms)}
         uniforms={uniforms}
         vertexShader={vert}
         fragmentShader={frag}

@@ -44,7 +44,7 @@ function ProjectRow({ project: p, flip }) {
             height="790"
             className="aspect-[16/9] w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
           />
-          <span className="absolute left-3 top-3 rounded-md bg-[#ff1f3d] px-2 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white">
+          <span className="absolute left-3 top-3 rounded-md bg-india px-2 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white">
             Real dashboard
           </span>
         </a>
@@ -53,15 +53,15 @@ function ProjectRow({ project: p, flip }) {
 
       <div className="flex flex-col lg:col-span-5 lg:py-2">
         <div className="flex items-center gap-3">
-          <span className="font-display text-4xl leading-none text-[#ff3350]">{p.no}</span>
-          <span className="label !text-[#ff7083]">{p.tagline}</span>
+          <span className="font-display text-4xl leading-none text-saffron">{p.no}</span>
+          <span className="label !text-saffron">{p.tagline}</span>
         </div>
         <h3 className="mt-3 font-display text-3xl leading-[1.02] tracking-wide text-white md:text-[2.5rem]">{p.title}</h3>
         <p className="body mt-3">{p.text}</p>
         <ul className="mt-4 space-y-2">
           {p.points.map((pt) => (
             <li key={pt} className="flex gap-3 text-[0.97rem] leading-relaxed text-white/90">
-              <span className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff1f3d]" />
+              <span className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" />
               {pt}
             </li>
           ))}
@@ -79,7 +79,7 @@ function ProjectRow({ project: p, flip }) {
           href={p.link}
           target="_blank"
           rel="noreferrer"
-          className="mt-5 inline-flex w-max items-center gap-2 rounded-full border border-[#ff1f3d]/70 px-5 py-2.5 font-mono text-xs uppercase tracking-[0.16em] text-white transition hover:bg-[#ff1f3d]"
+          className="mt-5 inline-flex w-max items-center gap-2 rounded-full border border-india/70 px-5 py-2.5 font-mono text-xs uppercase tracking-[0.16em] text-white transition hover:bg-[#ff1f3d]"
         >
           View on GitHub ↗
         </a>
@@ -94,9 +94,9 @@ export default function Projects() {
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <Eyebrow no="07">Match-winning knocks</Eyebrow>
+            <Eyebrow no="08">Match-winning knocks</Eyebrow>
             <h2 data-reveal className="h-display mt-5 text-[clamp(2.7rem,6vw,5.6rem)]">
-              Projects that <span className="neon-red">hit</span> the boundary.
+              Projects that <span className="accent-text">hit</span> the boundary.
             </h2>
           </div>
           <p data-reveal className="body max-w-sm !text-[0.95rem]">

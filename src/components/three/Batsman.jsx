@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { store, on } from '../../lib/store'
+import { towerOn, TOWER_ANGLES, TOWER_R } from './lights'
+import { bindUniforms } from './bindUniforms'
 
 // The batter: a motion-captured figure (walk + idle clips) dressed in code with
 // helmet, pads, gloves and a bat. He walks in from the boundary, takes guard and
@@ -439,6 +441,7 @@ export default function Batsman() {
     return { mixer, idle, walk, w: 0 }
   }, [scene, animations])
   const shadowTex = useMemo(() => blobTexture(), [])
+  const floodShadows = useRef([])
 
   const dustGeo = useMemo(() => {
     const n = 26
@@ -478,6 +481,15 @@ export default function Batsman() {
     dustUniforms.uAge.value += dt
     const group = root.current
     const show = store.stage < 1.9 || store.prewarm
+    // four soft shadows, one from each floodlight tower, like a real night match
+    floodShadows.current.forEach((g, i) => {
+      if (!g) return
+      g.visible = show
+      const a = TOWER_ANGLES[i]
+      g.position.set(store.batsman.x, 0.013, store.batsman.z)
+      g.rotation.y = -Math.atan2(store.batsman.z - Math.sin(a) * TOWER_R, store.batsman.x - Math.cos(a) * TOWER_R)
+      g.children[0].material.opacity = 0.2 * towerOn(i)
+    })
     group.visible = show
     keyLight.current.intensity = show ? 75 : 0
     if (!show) return
@@ -544,6 +556,14 @@ export default function Batsman() {
 
   return (
     <group>
+      {TOWER_ANGLES.map((a, i) => (
+        <group key={i} ref={(el) => (floodShadows.current[i] = el)}>
+          <mesh rotation-x={-Math.PI / 2} position-x={1.25} scale={[2.6, 0.55, 1]} renderOrder={1}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial map={shadowTex} transparent opacity={0} depthWrite={false} />
+          </mesh>
+        </group>
+      ))}
       <group ref={root} position={WALK_FROM}>
         <primitive object={scene} />
         <mesh rotation-x={-Math.PI / 2} position-y={0.014} scale={[1.25, 0.85, 1]} renderOrder={1}>
@@ -553,12 +573,12 @@ export default function Batsman() {
       </group>
 
       <points ref={dust} geometry={dustGeo} frustumCulled={false}>
-        <shaderMaterial uniforms={dustUniforms} vertexShader={dustVert} fragmentShader={dustFrag} transparent depthWrite={false} />
+        <shaderMaterial ref={bindUniforms(dustUniforms)} uniforms={dustUniforms} vertexShader={dustVert} fragmentShader={dustFrag} transparent depthWrite={false} />
       </points>
 
       {/* floodlight key on the crease + red rim from behind */}
       <spotLight ref={keyLight} position={[3.2, 5.5, -4.4]} angle={0.42} penumbra={0.9} intensity={70} distance={16} decay={2} color="#fff4ea" />
-      <pointLight position={[-2.2, 1.7, -10.6]} color="#ff2a48" intensity={22} distance={7} decay={2} />
+      <pointLight position={[-2.2, 1.7, -10.6]} color="#5b8cff" intensity={26} distance={7} decay={2} />
     </group>
   )
 }

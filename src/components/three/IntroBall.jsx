@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createBallTextures } from './textures'
 import { store, on } from '../../lib/store'
+import { bindUniforms } from './bindUniforms'
 
 // Intro finale: a new ball drops out of the night sky, knocks into the pitch in front of
 // the batter (neon shockwave + dust + flash on every bounce) and rolls up to his bat.
@@ -29,7 +30,7 @@ const ringFrag = /* glsl */ `
     float band = smoothstep(0.09, 0.0, abs(r - front)) ;
     float inner = smoothstep(front, 0.0, r) * 0.18;
     float fade = (1.0 - front) * uPower;
-    vec3 col = mix(vec3(3.6, 0.2, 0.35), vec3(3.8, 3.0, 2.6), band * 0.35);
+    vec3 col = mix(vec3(3.4, 1.6, 0.35), vec3(3.8, 3.2, 2.8), band * 0.35);
     gl_FragColor = vec4(col, (band + inner) * fade);
   }
 `
@@ -166,18 +167,18 @@ export default function IntroBall() {
     <group>
       <mesh ref={ball} visible={false} castShadow>
         <sphereGeometry args={[R, 32, 24]} />
-        <meshPhysicalMaterial map={tex.map} roughness={0.4} clearcoat={0.7} emissive="#ff1f3d" emissiveIntensity={0.25} />
+        <meshPhysicalMaterial map={tex.map} roughness={0.4} clearcoat={0.7} emissive="#ff5a2a" emissiveIntensity={0.25} />
       </mesh>
       {ringUniforms.map((u, i) => (
         <mesh key={i} ref={(el) => (rings.current[i] = el)} rotation-x={-Math.PI / 2} frustumCulled={false}>
           <planeGeometry args={[1, 1]} />
-          <shaderMaterial uniforms={u} vertexShader={ringVert} fragmentShader={ringFrag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+          <shaderMaterial ref={bindUniforms(u)} uniforms={u} vertexShader={ringVert} fragmentShader={ringFrag} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
         </mesh>
       ))}
       <points ref={dust} geometry={dustGeo} frustumCulled={false}>
-        <shaderMaterial uniforms={dustUniforms} vertexShader={dustVert} fragmentShader={dustFrag} transparent depthWrite={false} />
+        <shaderMaterial ref={bindUniforms(dustUniforms)} uniforms={dustUniforms} vertexShader={dustVert} fragmentShader={dustFrag} transparent depthWrite={false} />
       </points>
-      <pointLight ref={flash} color="#ff2a48" intensity={0} distance={5} decay={2} />
+      <pointLight ref={flash} color="#ffa23a" intensity={0} distance={5} decay={2} />
     </group>
   )
 }

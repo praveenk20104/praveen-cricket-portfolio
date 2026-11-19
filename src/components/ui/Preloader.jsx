@@ -66,7 +66,7 @@ export default function Preloader({ ready, onDone }) {
     <div ref={root} className="preloader" role="status" aria-live="polite" aria-label={`Loading ${shown}%`}>
       <div className="preloader__half preloader__half--top" />
       <div className="preloader__half preloader__half--bottom" />
-      <div className="pl-line absolute left-0 right-0 top-1/2 h-px bg-gradient-to-r from-transparent via-[#ff1f3d] to-transparent opacity-60" />
+      <div className="pl-line absolute left-0 right-0 top-1/2 h-px bg-gradient-to-r from-transparent via-saffron to-transparent opacity-60" />
 
       <div className="pl-center relative flex flex-col items-center gap-8">
         <svg viewBox="-95 -95 190 190" className="h-[11.9rem] w-[11.9rem] overflow-visible">
@@ -102,7 +102,7 @@ export default function Preloader({ ready, onDone }) {
             <circle r={R - 5} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="5" strokeDasharray="2 6" />
             <circle r={R + 5} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="5" strokeDasharray="2 6" />
             <g mask="url(#pl-mask)">
-              <circle r={R} fill="none" stroke="#ff1f3d" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 6px #ff1f3d)' }} />
+              <circle r={R} fill="none" stroke="#ffa23a" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 6px #ffa23a)' }} />
               <circle r={R - 5} fill="none" stroke="#fff3e3" strokeWidth="5" strokeDasharray="2 6" />
               <circle r={R + 5} fill="none" stroke="#fff3e3" strokeWidth="5" strokeDasharray="2 6" />
             </g>
@@ -128,7 +128,7 @@ export default function Preloader({ ready, onDone }) {
         <div className="text-center">
           <div className="font-display text-6xl tabular-nums tracking-wide text-white">
             {String(shown).padStart(2, '0')}
-            <span className="text-[#ff1f3d]">%</span>
+            <span className="text-saffron">%</span>
           </div>
           <p className="eyebrow mt-3 h-4">{MESSAGES[msg]}…</p>
         </div>

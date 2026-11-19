@@ -9,7 +9,7 @@ export default function MatchBall() {
         <Eyebrow no="01">The new ball</Eyebrow>
         <h2 data-reveal className="h-display mt-5 text-[clamp(3rem,7.4vw,7rem)]">
           New ball. <br />
-          <span className="neon-red">New innings.</span>
+          <span className="accent-text">New innings.</span>
         </h2>
         <div data-reveal className="glass-strong mt-6 rounded-3xl p-5 md:p-6">
         <p className="body !text-[1.08rem] md:!text-[1.18rem]">{newBall.plain}</p>
@@ -42,7 +42,7 @@ export default function MatchBall() {
             <li key={b.title} data-reveal="pop" data-delay={i * 0.1} className="glass-strong neon-edge rounded-2xl p-4 md:p-5">
               <div className="flex items-center gap-2.5">
                 <BallIcon className="h-6 w-6" />
-                <span className="label !text-[#ff7083]">Ball {i + 1}</span>
+                <span className="label !text-saffron">Ball {i + 1}</span>
               </div>
               <h3 className="mt-3 font-display text-2xl leading-tight tracking-wide text-white">{b.title}</h3>
               <p className="mt-1.5 text-[0.95rem] leading-relaxed text-white/88">{b.text}</p>

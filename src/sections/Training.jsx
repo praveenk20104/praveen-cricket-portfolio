@@ -5,7 +5,7 @@ function Card({ tag, item }) {
   return (
     <li data-reveal className="glass-strong rounded-3xl p-6">
       <div className="flex items-center justify-between gap-4">
-        <span className="rounded-md bg-[#ff1f3d]/20 px-2 py-1 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[#ff7083] ring-1 ring-[#ff1f3d]/50">{tag}</span>
+        <span className="rounded-md bg-india/20 px-2 py-1 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-saffron ring-1 ring-india/50">{tag}</span>
         {item.period && <span className="label">{item.period}</span>}
       </div>
       <h3 className="mt-4 font-display text-2xl leading-tight tracking-wide text-white md:text-[1.7rem]">{item.title}</h3>
@@ -19,9 +19,9 @@ export default function Training() {
   return (
     <section id="training" className="relative flex min-h-screen flex-col justify-center py-28">
       <div className="mx-auto w-full max-w-7xl px-5 md:px-12 lg:px-16">
-        <Eyebrow no="08">The training camp</Eyebrow>
+        <Eyebrow no="09">The training camp</Eyebrow>
         <h2 data-reveal className="h-display mt-5 max-w-4xl text-[clamp(2.7rem,6vw,5.6rem)]">
-          Nets, drills and <span className="neon-red">degrees.</span>
+          Nets, drills and <span className="accent-text">degrees.</span>
         </h2>
         <div className="mt-10 grid gap-8 lg:grid-cols-2">
           <div>
@@ -49,7 +49,7 @@ export default function Training() {
           {row.map((t, i) => (
             <span key={i} className="flex items-center font-display text-4xl tracking-wide text-white md:text-6xl">
               <span className="px-6 md:px-9">{t}</span>
-              <span className="h-2.5 w-2.5 rounded-full bg-[#ff1f3d] shadow-[0_0_12px_#ff1f3d]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-saffron shadow-[0_0_12px_#ffa23a]" />
             </span>
           ))}
         </div>
