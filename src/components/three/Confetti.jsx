@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { on, reducedMotion } from '../../lib/store'
 import { BALL_POS } from './CricketBall'
 
-// Tricolour confetti that bursts round the match ball when the DRS decision says HIRED.
+// Tricolour confetti that bursts round the match ball when someone reaches out from the Next innings section.
 const N = 180
 const COLORS = ['#ff9933', '#ffffff', '#138808', '#2f6bff']
 const G = -3.2
@@ -37,7 +37,7 @@ export default function Confetti() {
     }
     m.instanceColor.needsUpdate = true
     m.instanceMatrix.needsUpdate = true
-    return on('hired', () => {
+    return on('cheer', () => {
       if (reducedMotion) return
       parts.forEach((p) => {
         const a = Math.random() * Math.PI * 2

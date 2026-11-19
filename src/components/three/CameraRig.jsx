@@ -21,7 +21,7 @@ const KEYS_WIDE = [
   { s: 7, pos: [-7.8, 2.4, -2.5], look: [-0.5, 0.6, -2.5] }, // career: square-leg broadcast angle
   { s: 8, pos: [0.01, 30, 4], look: [0, 0, -3] }, // projects: spider-cam, sixes flying out
   { s: 9, pos: [6, 3.2, 17], look: [-21, 11, -92] }, // training: big screen + fireworks
-  { s: 10, pos: [-2.6, 2.3, 14.4], look: [-2.0, 2.15, 9] }, // next innings: ball + text ring on the right
+  { s: 10, pos: [-3.1, 2.45, 15.9], look: [-1.75, 2.1, 9] }, // next innings: ball, text ring and contact satellites on the right
 ]
 const KEYS_TALL = [
   { s: 0, pos: [1.0, 1.5, -3.5], look: [-0.3, 0.7, -8.75] },
@@ -37,7 +37,7 @@ const KEYS_TALL = [
   { s: 7, pos: [-9, 3, -2.5], look: [0, 0.4, -2.5] },
   { s: 8, pos: [0.01, 34, 4], look: [0, 0, -2] },
   { s: 9, pos: [4, 3.5, 20], look: [-22, 16, -92] },
-  { s: 10, pos: [0, 2.7, 18.5], look: [0, 0.8, 9] },
+  { s: 10, pos: [0, 2.9, 19.6], look: [0, 0.75, 9] },
 ]
 
 // Intro, part 1: a drone shot sweeping over the stands while the floodlights switch on

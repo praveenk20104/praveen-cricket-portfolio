@@ -1,56 +1,215 @@
-import { useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { profile } from '../data/profile'
 import Magnetic from '../components/ui/Magnetic'
-import { Eyebrow, BallIcon } from '../components/ui/Bits'
-import { emit, reducedMotion, scrollToId } from '../lib/store'
+import { Eyebrow } from '../components/ui/Bits'
+import { emit, isTouch, reducedMotion, scrollToId } from '../lib/store'
 import { EASE } from '../lib/motion'
 
-const battingOrder = [
-  { label: 'Email', value: profile.email, href: `mailto:${profile.email}` },
-  { label: 'Phone', value: profile.phone, href: `tel:${profile.phone.replace(/\s/g, '')}` },
-  { label: 'LinkedIn', value: 'praveen-kumar-590517277', href: profile.linkedin },
-  { label: 'GitHub', value: 'praveenk20104', href: profile.github },
+/* ---------- simple line icons (drawn here, no icon library) ---------- */
+const Icon = {
+  email: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+      <path d="m4 7.5 8 6 8-6" />
+    </svg>
+  ),
+  phone: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.6" />
+      <path d="M10.5 18.2h3" />
+      <path d="M10 5.2h4" opacity="0.6" />
+    </svg>
+  ),
+  linkedin: (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <rect x="4" y="9.5" width="3.2" height="10" rx="0.6" />
+      <circle cx="5.6" cy="5.9" r="1.9" />
+      <path d="M10 9.5h3v1.5c.6-1 1.8-1.8 3.4-1.8 2.6 0 3.6 1.7 3.6 4.4v5.9h-3.2v-5.4c0-1.3-.4-2.2-1.6-2.2-1.3 0-2 .9-2 2.3v5.3H10z" />
+    </svg>
+  ),
+  github: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m8 7-5 5 5 5" />
+      <path d="m16 7 5 5-5 5" />
+      <path d="m13.5 4.5-3 15" opacity="0.75" />
+    </svg>
+  ),
+}
+
+// The same four channels orbit the match ball in the 3D scene (ContactOrbit.jsx): hovering a card
+// lights up its orb in the stadium.
+const channels = [
+  { id: 'email', label: 'Email', value: profile.email, href: `mailto:${profile.email}`, action: 'Write', color: '#ffa23a', copy: profile.email },
+  { id: 'phone', label: 'Phone', value: profile.phone, href: `tel:${profile.phone.replace(/\s/g, '')}`, action: 'Call', color: '#2fd27a', copy: profile.phone },
+  { id: 'linkedin', label: 'LinkedIn', value: 'praveen-kumar-590517277', href: profile.linkedin, action: 'Connect', color: '#4d86ff' },
+  { id: 'github', label: 'GitHub', value: 'praveenk20104', href: profile.github, action: 'Follow', color: '#f4f1ea' },
 ]
 
-// DRS: the third umpire reviews the decision, check by check, then shows it on the big screen
-const checks = [
-  { k: 'Ball tracking', v: 'Skills in line' },
-  { k: 'UltraEdge', v: '2+ years of real work' },
-  { k: 'Impact', v: 'Dashboards that get used' },
-]
+/* ---------- a contact card that tilts in 3D under the mouse, with a glare and a layered icon ---------- */
+function ContactCard({ c, i }) {
+  const ref = useRef()
+  const [copied, setCopied] = useState(false)
 
-function DrsReview() {
-  const root = useRef()
   useEffect(() => {
+    const el = ref.current
+    const focus = () => emit('contactFocus', i)
+    const blur = () => emit('contactFocus', -1)
+    if (isTouch || reducedMotion) {
+      el.addEventListener('pointerdown', focus)
+      el.addEventListener('focusin', focus)
+      el.addEventListener('focusout', blur)
+      return () => {
+        el.removeEventListener('pointerdown', focus)
+        el.removeEventListener('focusin', focus)
+        el.removeEventListener('focusout', blur)
+      }
+    }
+    let raf = 0
+    const t = { x: 0, y: 0 }
+    const cur = { x: 0, y: 0 }
+    const loop = () => {
+      cur.x += (t.x - cur.x) * 0.16
+      cur.y += (t.y - cur.y) * 0.16
+      el.style.setProperty('--tx', cur.x.toFixed(4))
+      el.style.setProperty('--ty', cur.y.toFixed(4))
+      raf = Math.abs(t.x - cur.x) + Math.abs(t.y - cur.y) > 0.001 ? requestAnimationFrame(loop) : 0
+    }
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(loop)
+    }
+    const move = (e) => {
+      const r = el.getBoundingClientRect()
+      const px = (e.clientX - r.left) / r.width
+      const py = (e.clientY - r.top) / r.height
+      t.x = px - 0.5
+      t.y = py - 0.5
+      el.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`)
+      el.style.setProperty('--my', `${(py * 100).toFixed(1)}%`)
+      kick()
+    }
+    const enter = () => {
+      el.classList.add('is-hot')
+      focus()
+    }
+    const leave = () => {
+      el.classList.remove('is-hot')
+      t.x = 0
+      t.y = 0
+      kick()
+      blur()
+    }
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerenter', enter)
+    el.addEventListener('pointerleave', leave)
+    el.addEventListener('focusin', enter)
+    el.addEventListener('focusout', leave)
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerenter', enter)
+      el.removeEventListener('pointerleave', leave)
+      el.removeEventListener('focusin', enter)
+      el.removeEventListener('focusout', leave)
+    }
+  }, [i])
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(c.copy)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = c.copy
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
+    setCopied(true)
+    emit('cheer', i)
+    setTimeout(() => setCopied(false), 1700)
+  }
+
+  const external = c.href.startsWith('http')
+  return (
+    <li ref={ref} className="cc" data-id={c.id} style={{ "--c": c.color }}>
+      <div className="cc-inner">
+        <span className="cc-border" aria-hidden />
+        <span className="cc-bg" aria-hidden />
+        <span className="cc-num" aria-hidden>
+          0{i + 1}
+        </span>
+        <span className="cc-shine" aria-hidden />
+
+        <a
+          className="cc-link"
+          href={c.href}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noreferrer' : undefined}
+          aria-label={`${c.label}: ${c.value}`}
+          onClick={() => emit('cheer', i)}
+        />
+
+        <div className="cc-top">
+          <span className="cc-icon" aria-hidden>
+            <span className="cc-orbit" />
+            <span className="cc-orb">{Icon[c.id]}</span>
+          </span>
+          {c.copy && (
+            <button type="button" className="cc-copy" onClick={copy} aria-label={`Copy ${c.label.toLowerCase()}`}>
+              {copied ? 'Copied ✓' : 'Copy'}
+            </button>
+          )}
+        </div>
+
+        <div className="cc-text">
+          <span className="cc-label">{c.label}</span>
+          <span className="cc-value" title={c.value}>
+            {c.value}
+          </span>
+        </div>
+        <span className="cc-go" aria-hidden>
+          {c.action} <span className="cc-arrow">→</span>
+        </span>
+      </div>
+    </li>
+  )
+}
+
+/* ---------- headline: words flip up in 3D, like a scoreboard turning over ---------- */
+function FlipWords({ text, className = '' }) {
+  return text.split(' ').map((w, i, a) => (
+    <Fragment key={i}>
+      <span className="flip-mask">
+        <span className={`flip-word ${className}`}>{w}</span>
+      </span>
+      {i < a.length - 1 ? ' ' : ''}
+    </Fragment>
+  ))
+}
+
+export default function Contact() {
+  const root = useRef()
+  const subject = encodeURIComponent("Let's work together (via your portfolio)")
+
+  useEffect(() => {
+    if (reducedMotion) return
     const q = gsap.utils.selector(root)
-    const rows = q('.drs-row')
-    const reset = () => {
-      rows.forEach((r) => (r.dataset.state = 'pending'))
-      gsap.set(q('.drs-decision-final'), { autoAlpha: 0, scale: 0.85 })
-      gsap.set(q('.drs-decision-wait'), { autoAlpha: 1 })
-    }
-    reset()
-    if (reducedMotion) {
-      rows.forEach((r) => (r.dataset.state = 'done'))
-      gsap.set(q('.drs-decision-final'), { autoAlpha: 1, scale: 1 })
-      gsap.set(q('.drs-decision-wait'), { autoAlpha: 0 })
-      return
-    }
-    const tl = gsap.timeline({ paused: true })
-    rows.forEach((row, i) => {
-      tl.fromTo(row.querySelector('.drs-scan'), { xPercent: -100 }, { xPercent: 100, duration: 0.55, ease: EASE.inOut }, i * 0.7)
-      tl.call(() => (row.dataset.state = 'done'), null, i * 0.7 + 0.5)
-    })
-    tl.to(q('.drs-decision-wait'), { autoAlpha: 0, duration: 0.2 }, rows.length * 0.7 + 0.2)
-      .to(q('.drs-decision-final'), { autoAlpha: 1, scale: 1, duration: 0.6, ease: 'back.out(2)' }, '<')
-      .call(() => emit('hired'), null, '<0.1')
+    const words = q('.flip-word')
+    const cards = q('.cc')
+    gsap.set(words, { rotationX: -95, yPercent: 40, opacity: 0, transformOrigin: '50% 100% -0.4em', transformPerspective: 700 })
+    gsap.set(cards, { rotationX: -55, y: 70, z: -160, opacity: 0, transformPerspective: 1000, transformOrigin: '50% 0%' })
+    const tl = gsap
+      .timeline({ paused: true })
+      .to(words, { rotationX: 0, yPercent: 0, opacity: 1, duration: 1.0, ease: EASE.out, stagger: 0.07 })
+      .to(cards, { rotationX: 0, y: 0, z: 0, opacity: 1, duration: 1.1, ease: EASE.out, stagger: 0.1, clearProps: 'transform' }, 0.35)
+      .call(() => emit('cheer', -1), null, 0.9)
     const st = ScrollTrigger.create({
       trigger: root.current,
-      start: 'top 80%',
-      onEnter: () => (reset(), tl.restart()),
-      onEnterBack: () => (reset(), tl.restart()),
+      start: 'top 70%',
+      onEnter: () => tl.play(),
+      onLeaveBack: () => tl.reverse(),
     })
     return () => {
       st.kill()
@@ -59,64 +218,43 @@ function DrsReview() {
   }, [])
 
   return (
-    <div ref={root} data-reveal className="mt-7 overflow-hidden rounded-2xl border border-white/15 bg-[#060a18]/95">
-      <div className="flex items-center justify-between bg-india px-4 py-2">
-        <span className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-white">Third umpire · DRS review</span>
-        <span className="flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-white">
-          <span className="red-dot !h-1.5 !w-1.5" /> Live
-        </span>
-      </div>
-      <p className="border-b border-white/10 px-4 py-2.5 text-sm text-white/85">
-        Reviewing: <span className="font-semibold text-white">should you hire {profile.name}?</span>
-      </p>
-      <ul>
-        {checks.map((c) => (
-          <li key={c.k} className="drs-row relative flex items-center justify-between gap-3 overflow-hidden border-b border-white/10 px-4 py-2.5" data-state="pending">
-            <span className="drs-scan pointer-events-none absolute inset-0" />
-            <span className="relative">
-              <span className="label block !text-[0.65rem]">{c.k}</span>
-              <span className="text-[0.95rem] text-white">{c.v}</span>
-            </span>
-            <span className="drs-status relative rounded px-2 py-1 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-white/70 transition-colors">
-              ✓ Clear
-            </span>
-          </li>
-        ))}
-      </ul>
-      <div className="relative grid h-20 place-items-center">
-        <p className="drs-decision-wait font-mono text-xs uppercase tracking-[0.3em] text-white/70">
-          Decision pending<span className="animate-pulse">…</span>
-        </p>
-        <div className="drs-decision-final absolute inset-2 flex items-center justify-center gap-4 rounded-xl bg-[#138808] shadow-[0_0_40px_rgba(19,136,8,0.55)]">
-          <span className="font-mono text-xs uppercase tracking-[0.3em] text-white/90">Decision</span>
-          <span className="font-display text-4xl tracking-[0.08em] text-white md:text-5xl">HIRED ✓</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function Contact() {
-  const subject = encodeURIComponent("Let's work together (via your portfolio)")
-  return (
-    <section id="contact" className="relative flex min-h-[100svh] flex-col px-5 pb-8 pt-28 portrait:pt-[44svh] md:px-12 lg:px-16">
+    <section
+      id="contact"
+      ref={root}
+      className="relative flex min-h-[100svh] flex-col px-5 pb-8 pt-28 portrait:pt-[40svh] md:px-12 lg:px-16"
+    >
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-end landscape:justify-center">
-        <div className="max-w-2xl portrait:glass-strong portrait:rounded-3xl portrait:p-5 md:portrait:p-8 landscape:max-w-[min(40rem,50vw)]">
+        <div className="max-w-2xl portrait:glass-strong portrait:rounded-3xl portrait:p-5 md:portrait:p-8 landscape:max-w-[min(42rem,52vw)]">
           <Eyebrow no="10">Next innings</Eyebrow>
-          <h2 data-reveal className="h-display mt-5 text-[clamp(2.9rem,7vw,6.6rem)] !leading-[0.9]">
-            Ready for the <br />
-            <span className="neon-text">next innings?</span>
+          <h2 className="h-display mt-5 text-[clamp(2.6rem,6.2vw,5.8rem)] !leading-[0.92]">
+            <FlipWords text="Ready for the" />
+            <br />
+            <FlipWords text="next innings?" className="neon-text" />
           </h2>
-          <p data-reveal className="h-display mt-3 text-2xl md:text-4xl">
-            Let&apos;s <span className="accent-text">connect.</span>
+          <p className="h-display mt-3 text-2xl md:text-4xl">
+            <FlipWords text="Let's" /> <FlipWords text="connect." className="accent-text" />
           </p>
 
-          <DrsReview />
+          <p data-reveal className="status-pill mt-5">
+            <span className="status-pill__dot" />
+            Open to Data Analyst &amp; MIS roles · {profile.location}
+          </p>
 
-          <div data-reveal className="mt-6 flex flex-wrap items-center gap-3 md:gap-4">
+          {/* four ways to reach me: 3D cards */}
+          <div className="mt-6">
+            <p className="label mb-3">Pick your shot</p>
+            <ol className="cc-grid">
+              {channels.map((c, i) => (
+                <ContactCard key={c.id} c={c} i={i} />
+              ))}
+            </ol>
+          </div>
+
+          <div data-reveal className="mt-7 flex flex-wrap items-center gap-3 md:gap-4">
             <Magnetic strength={0.4}>
               <a
                 href={`mailto:${profile.email}?subject=${subject}`}
+                onClick={() => emit('cheer', 0)}
                 className="cta-btn relative inline-flex items-center gap-3 px-7 py-4 font-mono text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_0_50px_rgba(255,31,61,0.55)] md:px-9 md:py-5"
               >
                 <span className="cta-pulse" />
@@ -130,31 +268,6 @@ export default function Contact() {
                 Download resume ↓
               </a>
             </Magnetic>
-          </div>
-
-          {/* contact details as a batting order */}
-          <div data-reveal className="mt-7">
-            <p className="label mb-2">Batting order</p>
-            <ol className="divide-y divide-white/12 overflow-hidden rounded-2xl border border-white/12 bg-[#0a0508]/80">
-              {battingOrder.map((b, i) => (
-                <li key={b.label}>
-                  <a
-                    href={b.href}
-                    target={b.href.startsWith('http') ? '_blank' : undefined}
-                    rel="noreferrer"
-                    className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-india/15"
-                  >
-                    <span className="w-6 font-mono text-xs text-saffron">0{i + 1}</span>
-                    <BallIcon className="h-3.5 w-3.5" />
-                    <span className="w-20 font-mono text-xs uppercase tracking-[0.14em] text-white/75">{b.label}</span>
-                    <span className="min-w-0 flex-1 truncate text-[0.95rem] text-white">{b.value}</span>
-                    <span className="text-white/50 transition-transform group-hover:translate-x-1 group-hover:text-saffron" aria-hidden>
-                      →
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ol>
           </div>
         </div>
       </div>

@@ -1,15 +1,19 @@
-# Praveen Kumar: 3D Cricket Portfolio (v6)
+# Praveen Kumar: 3D Cricket Portfolio (v7)
 
-A night match in a WebGL stadium. The intro opens on a drone shot as the floodlights switch on one tower at a time, dives down behind a batter in India blue (PRAVEEN, No. 19) and walks out with him. He takes guard and taps the pitch, a new ball drops from the sky and knocks into the pitch with a neon shockwave, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the new ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (sixes flying over the boundary), the training camp (big screen and fireworks) and the "Next innings" DRS review that ends in **DECISION: HIRED ✓**.
+A night match in a WebGL stadium. The intro opens on a drone shot as the floodlights switch on one tower at a time, dives down behind a batter in India blue (PRAVEEN, No. 19) and walks out with him. He takes guard and taps the pitch, a new ball drops from the sky and knocks into the pitch with a neon shockwave, and the TV-style player profile appears. Scrolling then moves the camera through ten sections: the new ball, the pitch report, services, the game plan, skills around the neon stumps, the career scorecard, projects (sixes flying over the boundary), the training camp (big screen and fireworks) and the "Next innings" section, where email, phone, LinkedIn and GitHub orbit the match ball as glowing 3D satellites.
 
-**New in v6**
+**New in v7**
+- **Next innings, rebuilt**: the headline flips up word by word like a scoreboard; an "open to roles" status light; four 3D contact cards (Email, Phone, LinkedIn, GitHub) that tilt under the mouse with a moving glare, a spinning gradient edge, a glossy icon orb with its own orbit, and one-tap **Copy** for email and phone. The same four channels orbit the match ball in the stadium with comet tails; hovering a card lights up its satellite, and reaching out sets off tricolour confetti. The DRS review is removed.
+- **New cursor**: a 3D gyroscope. A bright core sits exactly on the pointer, two rings (saffron and blue) spin on different axes and lean towards the direction you move, sparks fly off when you move fast, and a click sends out a shockwave. It opens up over links and becomes a bat over project screenshots.
+- **No more PK ball popup** between sections: the section change is now just a quick blue and saffron light sweep.
+
+**Added in v6**
 - **Hawk-Eye section**: four tracked deliveries (Excel, SQL, Python, Power BI) drawn as 3D ball paths with a pitch map, impact point and dashed predicted path.
 - **Ball-cam**: between the game plan and skills the camera rides the ball down the pitch with speed lines.
 - **Slow-motion replay**: every third delivery at the stumps replays in slow motion with a REPLAY badge on the TV strip.
-- **Broadcast wipes**: blue and saffron bands with the PK ball sweep across when you jump between sections.
+- **Broadcast wipes**: blue and saffron bands sweep across when you jump between sections.
 - **Real stadium**: stepped three-tier stands with seats, a roof with a light strip, black day-night sightscreens, swaying grass blades around the square, a cracked pitch, lens flare on the floodlights, four floodlight shadows under the batter, a seated 3D crowd doing the Mexican wave and waving tricolour flags.
 - **Palette**: India blue + saffron. Red is kept only for LIVE tags and the main buttons; glow is used in very few places.
-- **New cursor**: a small 3D cricket ball whose seam turns in the direction you move, with a blue-saffron comet trail (desktop only).
 - **Smooth on every device**: see section 6.
 
 **Stack:** Vite · React 19 · Tailwind CSS v4 · Three.js + React Three Fiber + Drei · @react-three/postprocessing · GSAP ScrollTrigger · Lenis
@@ -71,7 +75,8 @@ src/
     Grass.jsx                swaying grass blades around the square
     HawkEye.jsx              Hawk-Eye ball tracking (paths, pitch map, labels)
     BallCam.jsx              ball-cam ride with speed lines
-    Confetti.jsx             tricolour confetti when the DRS says HIRED
+    Confetti.jsx             tricolour confetti when someone reaches out
+    ContactOrbit.jsx         email / phone / LinkedIn / GitHub satellites orbiting the match ball
     lights.js                floodlight switch-on timing shared by all lighting
     bindUniforms.js          keeps every shader animation connected to the GPU
     SkillOrbit.jsx           skills floating around the stumps
@@ -81,7 +86,7 @@ src/
     IntroOverlay.jsx         "Under the lights" opener, lower-third, skip button
     Nav.jsx, ScoreBug.jsx    navigation, TV strip with over count and ball speed
     Scrim.jsx                keeps text readable over the 3D scene
-    Cursor.jsx, Magnetic.jsx 3D ball cursor with comet trail (bat over projects), magnetic buttons
+    Cursor.jsx, Magnetic.jsx 3D gyroscope cursor with sparks and click shockwave (bat over projects), magnetic buttons
     Wipe.jsx                 broadcast wipe between sections
   lib/motion.js              one easing style for every animation on the site
   sections/                  Hero, MatchBall, About, Services, GamePlan, Skills, HawkEye, Career, Projects, Training, Contact

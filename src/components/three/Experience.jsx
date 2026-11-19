@@ -15,6 +15,7 @@ import IntroBall from './IntroBall'
 import HawkEye from './HawkEye'
 import BallCam from './BallCam'
 import Confetti from './Confetti'
+import ContactOrbit from './ContactOrbit'
 import Effects from './Effects'
 import { store, isTouch } from '../../lib/store'
 
@@ -243,6 +244,7 @@ export default function Experience({ onReady, started }) {
           <HawkEye />
           <BallCam />
           <Confetti />
+          <ContactOrbit />
           <Fireworks />
           <SkillOrbit />
           <Particles />

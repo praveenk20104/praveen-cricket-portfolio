@@ -286,14 +286,18 @@ body {
   box-shadow: 0 0 10px var(--color-saffron);
 }
 
-/* ------------------------------------------------ custom cursor: a spinning 3D cricket ball */
+/* ------------------------------------------------ custom cursor: a 3D gyroscope */
+/* A bright core sits exactly on the pointer. Around it, two rings (saffron and blue) spin on
+   different axes in real 3D, each with a small satellite, and tilt towards the direction of travel.
+   Sparks trail behind. Over links the gyro opens up; a click sends out a shockwave. */
 html.has-cursor,
 html.has-cursor * {
   cursor: none !important;
 }
-.cur-trail,
-.cur-ball,
-.cur-ring,
+.cx-trail,
+.cx-dot,
+.cx-orb,
+.cx-ripple,
 .cursor-bat {
   position: fixed;
   top: 0;
@@ -302,88 +306,158 @@ html.has-cursor * {
   z-index: 9999;
   will-change: transform;
 }
-.cur-trail {
+.cx-trail {
   width: 100vw;
   height: 100vh;
   z-index: 9998;
 }
-.cur-ball {
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  transition:
-    width 0.35s var(--ease-out),
-    height 0.35s var(--ease-out),
-    margin 0.35s var(--ease-out),
-    opacity 0.25s;
+.cx-dot {
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
 }
-/* the leather sphere; the seam rolls inside it */
-.cur-ball__sphere {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  overflow: hidden;
-  background: radial-gradient(circle at 34% 28%, #ff8a8a 0%, #d6202f 32%, #8e0c16 68%, #3c0307 100%);
-  /* white + dark outline: readable on any background */
-  box-shadow:
-    0 0 0 1.5px rgba(255, 255, 255, 0.92),
-    0 0 0 3px rgba(4, 6, 14, 0.55),
-    0 4px 14px rgba(0, 0, 0, 0.6);
-}
-.cur-ball__seam {
-  position: absolute;
-  top: -10%;
-  bottom: -10%;
-  left: 50%;
-  width: 7px;
-  margin-left: -3.5px;
-  border-left: 1.5px dashed rgba(255, 244, 228, 0.95);
-  border-right: 1.5px dashed rgba(255, 244, 228, 0.95);
-  border-radius: 50%;
-}
-.cur-ball__shine {
-  position: absolute;
-  left: 18%;
-  top: 14%;
-  width: 34%;
-  height: 22%;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  filter: blur(1px);
-}
-.cur-ring {
-  width: 48px;
-  height: 48px;
-  margin: -24px 0 0 -24px;
-}
-.cur-ring > span {
+.cx-dot > span {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 999px;
-  border: 1.5px solid var(--color-saffron);
-  box-shadow: 0 0 18px rgba(255, 162, 58, 0.45);
-  transform: scale(0.4);
-  opacity: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 32%, #ffe1b8 58%, #ffa23a 100%);
+  box-shadow:
+    0 0 0 1.5px rgba(4, 6, 14, 0.75),
+    0 0 10px 2px rgba(255, 162, 58, 0.9),
+    0 0 26px 6px rgba(255, 162, 58, 0.35);
   transition:
-    transform 0.4s var(--ease-out),
-    opacity 0.3s;
+    transform 0.35s var(--ease-out),
+    opacity 0.25s;
 }
-.cur-hover .cur-ring > span {
-  transform: scale(1);
-  opacity: 1;
+.cx-orb {
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  transition: opacity 0.25s;
 }
-.cur-hover .cur-ball {
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
+.cx-scale {
+  position: absolute;
+  inset: 0;
+  perspective: 220px;
+  transition: transform 0.45s var(--ease-out);
 }
-.cur-bat .cur-ball,
-.cur-bat .cur-ring {
+.cx-gimbal {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.cx-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.75px solid;
+  transform-style: preserve-3d;
+}
+.cx-ring::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: #fff;
+}
+.cx-ring--a {
+  border-color: rgba(255, 162, 58, 0.95);
+  box-shadow:
+    0 0 10px rgba(255, 162, 58, 0.55),
+    inset 0 0 8px rgba(255, 162, 58, 0.35);
+  animation: cx-spin-a 2.4s linear infinite;
+}
+.cx-ring--a::after {
+  top: -4.5px;
+  box-shadow: 0 0 8px 2px rgba(255, 162, 58, 0.9);
+}
+.cx-ring--b {
+  inset: 6px;
+  border-color: rgba(98, 150, 255, 0.95);
+  box-shadow:
+    0 0 10px rgba(77, 134, 255, 0.6),
+    inset 0 0 8px rgba(77, 134, 255, 0.35);
+  animation: cx-spin-b 3.2s linear infinite;
+}
+.cx-ring--b::after {
+  bottom: -4.5px;
+  box-shadow: 0 0 8px 2px rgba(77, 134, 255, 0.95);
+}
+.cx-ring--c {
+  inset: -5px;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  animation: cx-spin-c 10s linear infinite;
+  transition:
+    border-color 0.3s,
+    inset 0.3s;
+}
+.cx-ring--c::after {
+  display: none;
+}
+@keyframes cx-spin-a {
+  from {
+    transform: rotateY(0deg) rotateX(64deg);
+  }
+  to {
+    transform: rotateY(360deg) rotateX(64deg);
+  }
+}
+@keyframes cx-spin-b {
+  from {
+    transform: rotateX(0deg) rotateY(66deg);
+  }
+  to {
+    transform: rotateX(-360deg) rotateY(66deg);
+  }
+}
+@keyframes cx-spin-c {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.cx-hover .cx-scale {
+  transform: scale(1.5);
+}
+.cx-hover .cx-ring--c {
+  border-style: solid;
+  border-color: rgba(255, 162, 58, 0.75);
+}
+.cx-hover .cx-dot > span {
+  transform: scale(0.65);
+}
+.cx-down .cx-scale {
+  transform: scale(0.72);
+}
+.cx-hover.cx-down .cx-scale {
+  transform: scale(1.2);
+}
+.cx-ripple {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 162, 58, 0.9);
+  box-shadow:
+    0 0 18px rgba(255, 162, 58, 0.5),
+    inset 0 0 14px rgba(77, 134, 255, 0.45);
   opacity: 0;
 }
-.cur-down .cur-ball {
-  transform-origin: center;
+.cx-bat .cx-dot,
+.cx-bat .cx-orb {
+  opacity: 0;
+}
+.cx-hidden .cx-dot,
+.cx-hidden .cx-orb,
+.cx-hidden .cx-trail {
+  opacity: 0;
+}
+.cx-hidden .cx-ring,
+.cx-bat .cx-ring {
+  animation-play-state: paused;
 }
 .cursor-bat {
   width: 96px;
@@ -404,11 +478,6 @@ html.has-cursor * {
 .cursor-bat.is-on.is-swing svg {
   transform: rotate(40deg) scale(1);
   transition-duration: 0.12s;
-}
-.cur-hidden .cur-ball,
-.cur-hidden .cur-ring,
-.cur-hidden .cur-trail {
-  opacity: 0;
 }
 
 /* ------------------------------------------------ Hawk-Eye labels (3D) */
@@ -467,21 +536,278 @@ html.has-cursor * {
   width: 9vw;
   background: linear-gradient(90deg, rgba(255, 162, 58, 0), rgba(255, 162, 58, 0.95), rgba(255, 162, 58, 0));
 }
-.wipe__logo {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  opacity: 0;
+/* ------------------------------------------------ Next innings: availability pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 210, 122, 0.35);
+  background: rgba(6, 20, 14, 0.8);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d6ffe7;
+}
+.status-pill__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: #2fd27a;
+  animation: pill-ping 1.8s ease-out infinite;
+}
+@keyframes pill-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 210, 122, 0.65);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(47, 210, 122, 0);
+  }
 }
 
-/* ------------------------------------------------ DRS review card */
-.drs-row[data-state='done'] .drs-status {
-  color: #04060e;
-  background: var(--color-saffron);
+/* headline words that flip up like a scoreboard */
+.flip-mask {
+  display: inline-block;
 }
-.drs-scan {
-  background: linear-gradient(90deg, transparent, rgba(77, 134, 255, 0.55), transparent);
+.flip-word {
+  display: inline-block;
+  backface-visibility: hidden;
+}
+
+/* ------------------------------------------------ Next innings: 3D contact cards */
+.cc-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 560px) {
+  .cc-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.cc {
+  --tx: 0;
+  --ty: 0;
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  perspective: 900px;
+}
+.cc-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 9rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--ty) * -16deg)) rotateY(calc(var(--tx) * 18deg));
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9);
+  transition: box-shadow 0.4s var(--ease-out);
+}
+.cc.is-hot .cc-inner {
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.95),
+    0 0 42px -10px color-mix(in srgb, var(--c) 60%, transparent);
+}
+.cc-border,
+.cc-bg,
+.cc-shine,
+.cc-link {
+  position: absolute;
+  border-radius: inherit;
+}
+.cc-border {
+  inset: 0;
+  padding: 1.2px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, transparent), rgba(255, 255, 255, 0.08) 45%, rgba(47, 107, 255, 0.4));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.cc.is-hot .cc-border {
+  background: conic-gradient(from var(--angle, 0deg), var(--c), #2f6bff, #ffa23a, var(--c));
+  animation: spin-angle 2.4s linear infinite;
+}
+.cc-bg {
+  inset: 1.2px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--c) 18%, transparent), transparent 55%),
+    linear-gradient(160deg, #0e1528, #060914);
+}
+.cc-num {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.1rem;
+  font-family: var(--font-display);
+  font-size: 4.4rem;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.13);
+  transform: translateZ(12px);
+  pointer-events: none;
+}
+.cc-shine {
+  inset: 0;
+  background: radial-gradient(260px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.14), transparent 45%);
+  opacity: 0;
+  transform: translateZ(1px);
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.cc.is-hot .cc-shine {
+  opacity: 1;
+}
+.cc-link {
+  inset: 0;
+  z-index: 2;
+  transform: translateZ(2px);
+}
+.cc-link:focus-visible {
+  outline: 2px solid var(--c);
+  outline-offset: 3px;
+}
+.cc-top {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  transform: translateZ(46px);
+  pointer-events: none;
+}
+.cc-icon {
+  position: relative;
+  width: 3.1rem;
+  height: 3.1rem;
+  transform-style: preserve-3d;
+}
+.cc-orb {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--c) 50%, white) 0%, var(--c) 40%, color-mix(in srgb, var(--c) 32%, #000) 100%);
+  box-shadow:
+    inset -6px -8px 14px rgba(0, 0, 0, 0.45),
+    inset 4px 5px 10px rgba(255, 255, 255, 0.25),
+    0 10px 24px -6px color-mix(in srgb, var(--c) 70%, transparent);
+}
+.cc[data-id='github'] .cc-orb,
+.cc[data-id='email'] .cc-orb {
+  color: #0b1020;
+}
+.cc-orb svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.cc-orbit {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--c) 85%, transparent);
+  border-left-color: transparent;
+  transform: rotateX(68deg);
+  animation: cc-orbit 3.4s linear infinite;
+}
+.cc-orbit::after {
+  content: '';
+  position: absolute;
+  top: -3.5px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px 2px var(--c);
+}
+@keyframes cc-orbit {
+  to {
+    transform: rotateX(68deg) rotateZ(360deg);
+  }
+}
+.cc-copy {
+  pointer-events: auto;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  transition:
+    border-color 0.25s,
+    color 0.25s,
+    background 0.25s;
+}
+.cc-copy:hover,
+.cc-copy:focus-visible {
+  border-color: var(--c);
+  color: var(--c);
+  background: rgba(255, 255, 255, 0.1);
+}
+.cc-text {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+  transform: translateZ(30px);
+  pointer-events: none;
+}
+.cc-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c);
+}
+.cc-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+}
+.cc-go {
+  position: relative;
+  margin-top: auto;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  transform: translateZ(22px);
+  pointer-events: none;
+  transition: color 0.3s;
+}
+.cc-arrow {
+  display: inline-block;
+  transition: transform 0.35s var(--ease-out);
+}
+.cc.is-hot .cc-go {
+  color: #fff;
+}
+.cc.is-hot .cc-arrow {
+  transform: translateX(5px);
+}
+.cc:active .cc-inner {
+  scale: 0.985;
 }
 
 /* ------------------------------------------------ shatter effect */
